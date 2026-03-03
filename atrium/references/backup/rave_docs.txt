@@ -1,0 +1,5555 @@
+Rave Reference
+
+==================================================
+Conventions
+==================================================
+
+This documentation uses the following conventions.
+
+
+--------------------------------------------------
+Tags
+--------------------------------------------------
+
+This documentation uses the following conventions for tags.
+
+NOTE
+  Matters of specific importance.
+
+SEE ALSO
+  Cross-references.
+
+EXAMPLE
+  An example.
+
+DROP-DOWN HOTSPOT LINK
+  A drop-down hotspot link. When you click the link, a screenshot
+  or a menu command description is displayed or hidden.
+
+LEGACY
+  Indicates that the function contains legacy information.
+  The tag remains stationary in the upper left corner of the topic,
+  regardless of how the page is scrolled.
+
+
+--------------------------------------------------
+Type styles
+--------------------------------------------------
+
+This documentation uses the following conventions for type styles:
+
+Italic
+  Cross-references.
+
+Bold
+  Names of GUI components, such as buttons, boxes, fields,
+  menus, and commands.
+
+Monospaced
+  Data and choices entered such as file names, values, and parameters.
+
+Initial Capitals
+  Names of forms and services, for example Plan Manager.
+
+>
+  Menu choices.
+  For example:
+    Hard Locks > Set
+  means select "Hard Locks" from the menu and select "Set"
+  from the submenu.
+
+
+--------------------------------------------------
+BNF notation
+--------------------------------------------------
+
+This documentation uses BNF notation when describing code syntax.
+The following meta symbols are used:
+
+::=
+  Is defined as.
+
+|
+  or
+
+*
+  The preceding item is repeated zero or more times.
+
++
+  An item is repeated one or more times.
+
+(x1 | x2)*
+  Parentheses are used to group items.
+
+[remark]
+  Optional items are enclosed in meta symbols (square brackets).
+
+
+--------------------------------------------------
+BNF type styles
+--------------------------------------------------
+
+variable
+  Distinguishes syntax rule names
+  (also called non-terminal symbols or category names).
+
+parameter
+  Indicates terminal symbols (reserved words),
+  which are to be written exactly as presented.
+
+
+==================================================
+End of Document
+==================================================
+
+Introduction to Rave
+Rave is a global modelling language that describes legality, costs and quality constraints. Rave supports Crew & Ops Management solutions and is essential both for tuning everyday production and performing simulations. Rave is also used as a stand-alone product for in-house applications.
+The Rave language allows modelling of complex rules and cost functions that can be checked quickly by optimizers. The performance is essential, since an optimization job may have to do billions of rule and cost evaluations.
+Besides providing legality and cost functions for the optimizers, the definitions in Rave are also available for reports and GUI customization.
+The planning environment is constantly changing with new agreements, new bases, revised timetables, etc. Using Rave, you can implement new rules and costs within hours and you may simulate and evaluate the alternatives before any change is made in production. A change of rules or costs is immediately visual to all involved systems, which guarantees consistency. The flexibility provided by a modelling tool like Rave is the key to handle and adapt to changes in the planning process and business rules.
+
+User interface customization
+You use Rave to customize the user interfaces. With Rave you can visualize key values for planners, for example illegalities or required rest time after a duty. This way, you can easily modify the user interfaces to suit your needs.
+
+Data types
+Rave has five predefined data types: Int, Bool, String, Reltime and Abstime. The language also supports user-defined enumeration types. For each type there is a syntax for specifying the type itself and for expressing constants of the type. There are also built-in functions, operators and keywords allowing various computations to be performed on each type.
+Rave enforces strict type checking, which assists the Rave programmer in detecting some types of errors. Type checking means that types cannot be mixed freely in expressions. For instance, an integer cannot be added to a time, since integer and time represent different entities and adding them is generally not a useful operation. Each operation and built-in function defines what specific combinations of data types it allows.
+
+==================================================
+Int
+==================================================
+
+The integer type is used to represent positive and negative numbers.
+
+Valid range:
+  -2,147,483,648 to +2,147,483,647
+
+Integers should stay within this range to avoid undefined behavior.
+Please note that no error is raised for integers outside the range.
+
+
+--------------------------------------------------
+Notes
+--------------------------------------------------
+
+• There is no floating-point type.
+• Fractional numbers can usually be represented using integers,
+  for example as percentages.
+
+
+--------------------------------------------------
+Syntax
+--------------------------------------------------
+
+BNF notation for the integer data type:
+
+  data_type ::= int
+
+  int_const ::= one or more digits (0–9)
+
+
+--------------------------------------------------
+Examples
+--------------------------------------------------
+
+Valid integer constants:
+  0
+  10
+  42
+  1024
+
+Invalid or undefined behavior:
+  Values outside the allowed range may result in undefined behavior,
+  but no error is raised.
+
+
+==================================================
+Bool
+==================================================
+
+The boolean type has only two possible values:
+
+  true
+  false
+
+Booleans are used to represent logical states, that is, whether a
+certain condition is fulfilled or not.
+
+
+--------------------------------------------------
+Syntax
+--------------------------------------------------
+
+BNF notation for the boolean data type:
+
+  data_type ::= bool
+
+  bool_const ::= true | false
+
+
+--------------------------------------------------
+Examples
+--------------------------------------------------
+
+Valid boolean constants:
+  true
+  false
+
+Typical usage:
+  - Conditional expressions
+  - Logical flags
+  - State checks
+
+
+==================================================
+String
+==================================================
+
+Strings are (unlike all other parts of the language) case-sensitive.
+
+
+--------------------------------------------------
+Example
+--------------------------------------------------
+
+"String1" and "string1" are not equal.
+
+Furthermore:
+  "String1" < "string1"
+
+
+--------------------------------------------------
+Syntax
+--------------------------------------------------
+
+BNF notation for the string data type:
+
+  data_type ::= string
+
+  string_const ::= string+
+
+  string ::= A sequence of characters delimited by double
+              quotation marks (").
+
+
+--------------------------------------------------
+Character Rules
+--------------------------------------------------
+
+• Strings are enclosed in double quotation marks (").
+
+• All printable ISO-8859-1 (Latin-1) or UTF-8 characters may be used,
+  except:
+    - "   (double quotation mark)
+    - \   (backslash)
+    - newline
+
+
+--------------------------------------------------
+Escape Sequences
+--------------------------------------------------
+
+The following escape sequences are allowed inside strings:
+
+  \"   literal double quotation mark
+  \\   literal backslash
+  \n   newline
+  \t   tab
+
+
+--------------------------------------------------
+Notes
+--------------------------------------------------
+
+• Strings are case-sensitive.
+• Character ordering is affected by case.
+
+
+==================================================
+Reltime
+==================================================
+
+A relative time represents a period of time between two events,
+or a time of day.
+
+Relative times have:
+  • A resolution of 1 minute
+  • A guaranteed range of approximately ±4,000 years
+
+
+--------------------------------------------------
+Rules
+--------------------------------------------------
+
+• Both the hour and the minute values must be legal integers.
+• After converting a reltime to minutes, the resulting value
+  must fit into an integer.
+
+
+--------------------------------------------------
+Syntax
+--------------------------------------------------
+
+BNF notation for the reltime data type:
+
+  data_type ::= reltime
+
+  reltime_const ::= hour : minute
+
+  hour   ::= int_const
+  minute ::= int_const
+
+
+--------------------------------------------------
+Notes
+--------------------------------------------------
+
+• There are no explicit limits on the hour or minute values.
+
+• Values are normalized when interpreted.
+
+  Example:
+    40:100
+
+  Interpretation:
+    41 hours and 40 minutes
+
+
+--------------------------------------------------
+Examples
+--------------------------------------------------
+
+Valid relative times:
+  1:00
+  12:30
+  40:100
+
+Invalid values:
+  None syntactically — normalization is applied,
+  but the final minute value must fit within an integer.
+
+==================================================
+Abstime
+==================================================
+
+An absolute time represents the time and date of an event.
+
+Absolute times have:
+  • A resolution of 1 minute
+  • A guaranteed legal range from:
+      1 January 1901
+      through
+      31 December 2099
+
+Only legal dates are allowed.
+For example, a date such as February 31 will raise an error.
+
+
+--------------------------------------------------
+Time Rules
+--------------------------------------------------
+
+• If a time is specified, it must be in the range:
+    0:00 to 24:00 (inclusive)
+
+• Minutes must be in the range:
+    0 to 59
+
+This differs from reltime, where minutes can be any integer.
+
+
+--------------------------------------------------
+Year Interpretation
+--------------------------------------------------
+
+The year may be written in either of the following forms:
+
+• Full year:
+    1901–2100
+
+• Two-digit year:
+    0–99
+
+Two-digit year interpretation rules:
+  - Values greater than 85 are interpreted as:
+      1900 + year
+  - Values 85 or below are interpreted as:
+      2000 + year
+
+
+--------------------------------------------------
+Syntax
+--------------------------------------------------
+
+BNF notation for the abstime data type:
+
+  data_type ::= abstime
+
+  abstime_const ::=
+        month day year reltime_const
+      | month_day year reltime_const
+      | day month year [ reltime_const ]
+      | day month_year [ reltime_const ]
+
+
+  month ::= jan | feb | mar | apr | may | jun
+          | jul | aug | sep | oct | nov | dec
+
+  month_day  ::= month followed immediately by day
+  month_year ::= month followed immediately by year
+
+  day  ::= int_const
+  year ::= int_const
+
+
+--------------------------------------------------
+Examples
+--------------------------------------------------
+
+Valid absolute times:
+  jan 1 2024 12:00
+  feb15 2025 08:30
+  1 jan 99
+  31 dec 2099 24:00
+
+Invalid absolute times:
+  feb 31 2024      (illegal date)
+  12:75            (invalid minutes)
+
+==================================================
+Enum
+==================================================
+
+Rave supports user-defined enumeration types.
+
+Enumeration types are used when a variable has a limited number
+of legal values. By using an enum, you restrict parameters to
+only valid, predefined choices.
+
+
+--------------------------------------------------
+Example
+--------------------------------------------------
+
+enum targets =
+  max_roster;
+  production;
+end
+
+%target% = parameter production remark "Target for optimizer";
+
+%cost% =
+  if %target% = production then %production_cost%
+  else %max_roster_cost%;
+
+
+Explanation:
+
+The code above restricts the planner to select between:
+
+  max_roster
+  production
+
+If "targets" were a string, the planner could misspell the value.
+If "targets" were an integer, the planner would need to know the
+encoding (for example, does 0 mean max_roster or production?).
+
+Enums eliminate these problems by enforcing valid values.
+
+
+--------------------------------------------------
+Type Safety and Validation
+--------------------------------------------------
+
+• The Rave compiler enforces type correctness for enums.
+
+• This is especially useful for tables:
+  - If enums are used instead of strings, the compiler can detect
+    illegal values caused by misspellings.
+
+• For external tables:
+  - All enum values are validated the first time the table is accessed.
+  - Any illegal value is reported by the runtime system.
+
+• With strings, errors may remain undetected until a specific
+  code path requires the misspelled value.
+
+
+--------------------------------------------------
+Enum Rules
+--------------------------------------------------
+
+• The reserved word "enum" defines:
+  - The enumeration type
+  - All legal values of that type
+
+• Each enum type and each enum value must be unique within its scope.
+
+• If an enum type is exported, all its values are also exported.
+  The same applies to global export.
+
+• Enum values of the same type can be compared with each other.
+
+• The first enum value in a type is considered the smallest.
+
+• Enum types and enum values cannot be redefined via inheritance
+  in child modules.
+  - Only enum remarks can be redefined.
+
+• Both the enum type and each enum value may have their own remark.
+
+
+--------------------------------------------------
+Syntax
+--------------------------------------------------
+
+BNF notation for enumeration types:
+
+  enum_def ::=
+      gexport enum enum_ident =
+          enum_values
+          [ remark ; ]
+      end
+
+  enum_ident ::= ident
+
+  enum_values ::=
+        enum_values enum_value
+      | enum_value
+
+  enum_value ::=
+        ident remark ;
+
+  data_type ::=
+        qual_enum_ident
+
+  enum_const ::=
+        qual_enum_value
+
+
+--------------------------------------------------
+Additional Notes
+--------------------------------------------------
+
+• For explanations of "gexport" and the "qual" prefix,
+  refer to the Modules documentation.
+
+
+Overflow and other arithmetic exceptions
+Integer, reltime and abstime types are stored with a limited precision and the guaranteed ranges described in previous sections. If very large integers or times are manipulated, an overflow can occur. Rave does not detect or repair overflow conditions. A division by zero will result in a run-time error and the outcome of a rule legality check is undefined in such a case.
+Note
+It is the responsibility of the Rave programmer to avoid overflow and division-by-zero situations.
+
+
+Void values
+Expressions in the Rave language do not always have a well-defined value. For instance, the next and prev traversers could refer to an object that does not exist (because the current object is the last or the first object). When Rave runs into something like this, it ignores the rest of the expression and returns void.
+A void return value is transferred, according to certain rules, from a primary expression to more complex ones. It is important to realize that a rule that is evaluated to void in a certain context will not be tested in that context, this means the rule is regarded as legal.
+An expression returning void always starts with an expression that does not have a well-defined value in a certain context. Here is how this void value is transferred through more complex expressions:
+• All unary and binary expressions with a void operand are void.
+• The traversers first, last, next and prev return void if the expression is void, or if the traverser refers to an object that does not exist.
+• The traversers avg, max and min do not return void if there is at least one object that contributes to the net result with a non-void value. On the other hand, if all contributions are void or if there are no objects that apply (because of a filter or a where condition), these traversers return void.
+• A traverser returns void if it specifies a from- or to-point that does not exist.
+• Unless they have a non-existing from- or to-point, the traversers sum, count, all, any and cat never return void. If no objects apply or if all contributions are void, sum and count return zero (0), all returns true, any returns false, and cat returns the empty string ("").
+• Built-in and user defined functions return void if any of the arguments are void. The only exceptions are the functions void and default.
+• If then else returns void if the condition is void or if the applicable expression is void. The two first examples below return void. The last one is not void.
+    If <void> then <not void> else <not void>;
+    If <true> then <void> else <not void>;
+    If <false> then <void> else <not void>;
+• Context or transform return void if the result of the context or the transform is an empty set of objects.
+ 
+Expressions
+Rave contains a number of operators, built-in functions and traversers, allowing complex expressions to be built from primary expressions.
+
+==================================================
+Dependencies and Objects
+==================================================
+
+The fundamental data model of Rave is a chain of objects.
+
+A typical example is a trip that contains a number of legs.
+Any number of additional levels, such as duty, can be added
+by the Rave programmer.
+
+See the Levels documentation for more details on how levels
+are defined and named.
+
+
+--------------------------------------------------
+Example Level Structure
+--------------------------------------------------
+
+A common level structure consists of:
+
+  • Trip
+      • Duty
+          • Leg
+
+This structure is used for all examples in this manual.
+
+
+--------------------------------------------------
+Level Definitions
+--------------------------------------------------
+
+Trip
+  Represents a complete schedule where a crew member starts
+  and ends at the same base.
+
+Duty
+  Corresponds to a day of work within a trip.
+
+Leg
+  The smallest planning unit.
+  Represents a single flight from one airport to another.
+
+
+--------------------------------------------------
+Expressions and Dependencies
+--------------------------------------------------
+
+All expressions in the Rave language operate on available
+level objects.
+
+An expression always:
+  • Belongs to a specific level
+  • Defines an attribute for that level
+
+Examples:
+  • A flight’s departure and arrival times are attributes
+    on the leg level.
+  • The sum of block times within a duty is a duty-level
+    attribute.
+
+The level for which an expression defines an attribute is
+called the dependency of the expression.
+
+
+--------------------------------------------------
+Key Concepts Summary
+--------------------------------------------------
+
+• Rave data is organized as a hierarchy of levels.
+• Levels form a chain of dependent objects.
+• Expressions define attributes at a specific level.
+• The level of an expression determines its dependency.
+
+==================================================
+Keywords
+==================================================
+
+Keywords are used to access information about an object,
+for example a flight.
+
+They should be seen as the basic attributes of objects.
+By combining keywords, you can create more advanced
+expressions, rules, and costs.
+
+
+--------------------------------------------------
+Keyword Characteristics
+--------------------------------------------------
+
+• All keywords are system-configurable.
+• Available keywords depend on the application in which
+  the rules are used.
+• Each keyword has:
+    - A specific data type
+    - A dependency level
+• Some keywords take additional arguments.
+
+A keyword has one of the following dependency levels:
+  - Constant
+  - Atomic
+  - Full chain
+
+A keyword constitutes an attribute for all objects on
+its dependency level.
+
+
+--------------------------------------------------
+Example
+--------------------------------------------------
+
+Adding attributes to the level hierarchy.
+
+Assume the following predefined leg-level keywords exist:
+
+  arrival
+  departure
+
+Using these keywords, two new attributes can be created:
+
+--------------------------------------------------
+Code Example
+--------------------------------------------------
+
+/* Block time is the time between departure and arrival */
+%block_time% = arrival - departure;
+
+/* Aggregated block time for a duty */
+/* Take the sum of %block_time% for each leg in the duty */
+%duty_block_time% = sum(leg(duty), %block_time%);
+
+
+Explanation:
+
+• %block_time% is a leg-level attribute.
+• %duty_block_time% is a duty-level attribute created
+  by aggregating %block_time% over all legs in a duty.
+
+
+--------------------------------------------------
+Syntax
+--------------------------------------------------
+
+BNF notation for keyword expressions:
+
+  expr ::= keyword [ pexprs ]
+
+  keyword ::= ident
+
+
+--------------------------------------------------
+Key Concepts Summary
+--------------------------------------------------
+
+• Keywords represent basic object attributes.
+• They are combined to form expressions.
+• Each keyword has a defined data type and dependency level.
+• Aggregation functions allow attributes to be lifted to
+  higher levels in the hierarchy.
+
+==================================================
+Precedence and Associativity of Operators
+==================================================
+
+When an expression contains more than one operator and there
+are no parentheses to indicate how operands should be grouped,
+Rave uses operator precedence rules to determine the order
+of evaluation.
+
+Each operator has a defined precedence.
+
+
+--------------------------------------------------
+Operator Precedence
+--------------------------------------------------
+
+From highest precedence to lowest precedence:
+
+  1. *   /   mod
+     (multiplication, division, modulo)
+
+  2. +   -
+     (addition, subtraction)
+
+  3. =   <>   <   <=   >   >=   in   not
+     (comparison and membership operators)
+
+  4. and
+     (logical AND)
+
+  5. or
+     (logical OR)
+
+
+--------------------------------------------------
+Evaluation Rules
+--------------------------------------------------
+
+• Operators with higher precedence are evaluated before
+  operators with lower precedence.
+
+• Higher precedence operators bind more tightly.
+
+• When multiple operators of the same precedence appear
+  in an expression, evaluation proceeds from left to right
+  (left-associative).
+
+
+--------------------------------------------------
+Examples
+--------------------------------------------------
+
+Example 1:
+  a + b * c
+  → b * c is evaluated first
+
+Example 2:
+  a = b or c = d and e = f
+  → "and" is evaluated before "or"
+
+Example 3:
+  a - b - c
+  → evaluated as (a - b) - c
+
+
+--------------------------------------------------
+Best Practices
+--------------------------------------------------
+
+• Use parentheses to make expressions explicit and readable.
+• Do not rely solely on precedence for complex expressions.
+• Parentheses always override default precedence rules.
+
+==================================================
+Primary Expressions
+==================================================
+
+A primary expression is one of the basic building blocks
+of the Rave expression language.
+
+A primary expression can be:
+  • A variable
+  • A keyword
+  • A function
+  • A constant
+  • A parenthesized expression
+
+Parenthesized expressions can be used to:
+  • Control the evaluation order of an expression
+  • Improve code readability
+
+
+--------------------------------------------------
+Syntax
+--------------------------------------------------
+
+BNF notation for primary expressions:
+
+  expr ::=
+        qual_var_ident [ pexprs ]
+      | keyword [ pexprs ]
+      | function [ pexprs ]
+      | const
+      | ( expr )
+
+
+--------------------------------------------------
+Parameter Expressions
+--------------------------------------------------
+
+  pexprs ::= ( exprs )
+
+  exprs ::=
+        exprs , expr
+      | expr
+
+
+--------------------------------------------------
+Constants
+--------------------------------------------------
+
+A constant may be one of the following types:
+
+  const ::=
+        bool_const
+      | abstime_const
+      | reltime_const
+      | int_const
+      | string_const
+      | enum_const
+
+
+--------------------------------------------------
+Key Concepts Summary
+--------------------------------------------------
+
+• Primary expressions are the smallest evaluatable units.
+• They form the base of all larger expressions.
+• Parentheses always force explicit evaluation order.
+• Functions, variables, and keywords may take parameters.
+• Constants include all literal data types supported by Rave.
+
+==================================================
+Unary Operator Expressions
+==================================================
+
+Unary operator expressions apply an operator to a single
+operand (expression).
+
+
+--------------------------------------------------
+Syntax
+--------------------------------------------------
+
+BNF notation for unary operator expressions:
+
+  expr ::=
+        + expr
+      | - expr
+      | not expr
+
+
+--------------------------------------------------
+Operator Semantics
+--------------------------------------------------
+
++  (Unary plus)
+  • Takes an integer or reltime operand.
+  • Returns the value unchanged.
+  • The result has the same type as the operand.
+  • In practice, this operator has no effect.
+
+-  (Unary minus)
+  • Takes an integer or reltime operand.
+  • Returns the negated value.
+  • The result has the same type as the operand.
+
+not  (Logical negation)
+  • Takes a boolean operand.
+  • Returns the logical negation of the operand.
+  • true  → false
+  • false → true
+
+
+--------------------------------------------------
+Examples
+--------------------------------------------------
+
+Unary plus:
+  +5            → 5
+  +1:30         → 1:30
+
+Unary minus:
+  -5            → -5
+  -2:15         → -2:15
+
+Logical negation:
+  not true      → false
+  not false     → true
+
+
+--------------------------------------------------
+Key Concepts Summary
+--------------------------------------------------
+
+• Unary operators operate on a single expression.
+• The + and - operators work on integers and reltimes.
+• The not operator works only on booleans.
+• The resulting type is always the same as the operand type.
+
+==================================================
+Binary Operator Expressions
+==================================================
+
+Binary operator expressions combine TWO operands (expressions).
+They are grouped into the following classes:
+
+  • Multiplicative
+  • Additive
+  • Relational
+  • Logical
+  • Set membership
+
+
+--------------------------------------------------
+Syntax
+--------------------------------------------------
+
+expr ::=
+      expr multiplicative expr
+    | expr additive expr
+    | expr relational expr
+    | expr logical expr
+    | expr membership qual_ident
+
+
+==================================================
+1) Multiplicative Operators
+==================================================
+
+Syntax:
+
+  multiplicative ::= * | / | mod
+
+
+Semantics:
+
+*   Multiplication
+    • Integer multiplication.
+
+ /  Division
+    • Integer division (truncates toward 0).
+    • Example: 8 / 5 = 1
+    • Result is negative if one operand is negative and the other positive.
+
+mod Remainder
+    • Remainder of integer division.
+    • Example: 8 mod 5 = 3
+    • Result is negative if the LEFT operand is negative.
+
+
+Type combinations (result types):
+
+  Left operand   Operator   Right operand   Result
+  -------------------------------------------------
+  integer        *          integer         integer
+  integer        *          reltime         reltime
+  reltime        *          integer         reltime
+
+  integer        /          integer         integer
+  reltime        /          integer         reltime
+  reltime        /          reltime         integer
+
+  integer        mod        integer         integer
+  reltime        mod        reltime         reltime
+
+
+==================================================
+2) Additive Operators
+==================================================
+
+Syntax:
+
+  additive ::= + | -
+
+
+Type combinations (result types):
+
+  Left operand   Operator   Right operand   Result
+  -------------------------------------------------
+  integer        +          integer         integer
+  reltime        +          reltime         reltime
+  abstime        +          reltime         abstime
+  reltime        +          abstime         abstime
+
+  integer        -          integer         integer
+  reltime        -          reltime         reltime
+  abstime        -          abstime         reltime
+  abstime        -          reltime         abstime
+
+
+==================================================
+3) Relational Operators
+==================================================
+
+Syntax:
+
+  relational ::= = | <> | < | <= | > | >=
+
+
+Meaning (returns true if condition holds):
+
+  =    equal
+  <>   not equal
+  <    less than
+  <=   less than or equal
+  >    greater than
+  >=   greater than or equal
+
+
+Rules:
+
+• Relational operators compare TWO values and return a boolean:
+    - true if the comparison holds
+    - false otherwise
+
+• Relational operators can be used with operands of ANY data type,
+  BUT both operands must have the SAME type.
+
+Comparison behavior:
+
+• Integers: compared numerically (example: -2 < 17)
+• Reltime / abstime: compared similarly by time value
+• Booleans: false is less than true
+• Strings: compared alphabetically character-by-character by ASCII order
+    - digits < uppercase letters < lowercase letters
+    - ordering of national characters is undefined (depends on character set)
+
+
+==================================================
+4) Logical Operators
+==================================================
+
+Syntax:
+
+  logical ::= and | and2 | or | or2
+
+
+Semantics:
+
+and, and2
+  • true only if BOTH operands are true
+
+or, or2
+  • true if EITHER operand is true
+
+
+Important difference: short-circuit vs always-evaluate
+
+• and / or:
+    - evaluate the second operand ONLY if needed (short-circuit)
+
+• and2 / or2:
+    - ALWAYS evaluate both operands
+
+Consequence with "void" (missing/undefined) values:
+
+• If either argument becomes void:
+    - x and2 y   becomes void
+    - x and y    might NOT become void (if the first operand already decides)
+
+Commutativity consequence:
+
+• (x and2 y) is identical to (y and2 x)
+• (x and y)  is NOT necessarily identical to (y and x)
+
+
+==================================================
+5) Set Membership
+==================================================
+
+Syntax:
+
+  membership ::= [not] in
+
+
+Semantics:
+
+in
+  • returns true if the left operand is a member of the right operand
+
+Rules:
+
+• The RIGHT operand must be an identifier declared as a set.
+• The type of the LEFT operand must match the member type of the set.
+
+Examples (conceptual):
+
+  x in MySet
+  x not in MySet
+
+==================================================
+Traversers
+==================================================
+
+Traversers allow an expression to be evaluated within one or more objects of the same
+level (see Levels), with each value contributing to the net result.
+
+Sections:
+  • Syntax
+  • Description
+  • From, to, while and where
+  • Void values
+
+
+--------------------------------------------------
+Syntax
+--------------------------------------------------
+
+expr ::=
+      trav_ident (trav_key, expr) [trav_spec]
+    | trav_ident (trav_key [trav_spec], expr)
+    | trav_ident0 (trav_key) [trav_spec]
+    | trav_ident0 (trav_key [trav_spec])
+    | trav_cat
+
+
+trav_ident ::=
+      sum | avg | max | min | all | any | first | last | next | prev | earliest | latest
+
+
+trav_cat ::=
+      cat(trav_key, ident, ident [sep]) [trav_spec]
+    | cat(trav_key [trav_spec], ident, ident [, sep])
+
+
+sep ::= string
+
+
+trav_ident0 ::=
+      count | is_first | is_last
+
+
+trav_key ::=
+      qual_level_ident (expr)
+
+
+--------------------------------------------------
+Description
+--------------------------------------------------
+
+A traverser operates on objects of the type stated in the qual_level_ident
+inside a larger “parent” level defined by the expression part of trav_key.
+
+Example 1:
+  sum(leg(trip), arrival - departure)
+
+Meaning:
+  Operates on all leg objects within a trip object.
+  Result = sum of flight times (arrival - departure) for all legs in that trip.
+
+
+Traversers:
+
+1) sum, avg
+  • Operand type: integer or reltime
+  • Result type: integer or reltime respectively
+  • sum: sum of all expression values
+  • avg: sum divided by number of expression values
+  • If no cases apply (e.g., where condition always false):
+      - sum returns 0
+      - avg returns void
+
+2) max, min
+  • Operand type: any
+  • Result type: same as operand type
+  • max: largest value
+  • min: smallest value
+  • If no cases apply (e.g., where always false):
+      - both min and max return void
+
+3) all, any
+  • Operand type: boolean
+  • Result type: boolean
+  • all: true if all values are true
+  • any: true if any value is true
+  • Both return as soon as possible:
+      - all returns false immediately when one value is false
+      - any returns true immediately when one value is true
+  • If no cases apply (e.g., where always false):
+      - all returns true
+      - any returns false
+
+4) count
+  • Takes only one argument: the level
+  • Returns number of iterations
+  • count(level(plevel)) is identical to sum(level(plevel), 1)
+
+5) cat
+  • Operand type: string
+  • Result: concatenation of the strings
+  • Concatenation is built from the first to the last matching object,
+    regardless of traversal direction.
+  • If no cases apply (e.g., where always false):
+      - returns empty string
+  • Notes:
+      - heavy usage of string functions can hurt performance
+      - result is truncated if longer than 4095 characters
+      - cat may include an optional separator argument
+
+Example 2:
+  cat(leg(duty), departure_airport_name, ", ")
+
+Meaning:
+  Separator is ", "
+  Example result: "AMS, LHR, GOT, BRU"
+
+6) first, last
+  • Operand type: any
+  • Evaluates expression in the context of:
+      - the first level object (first)
+      - the last level object (last)
+    within the parent level
+
+Example 3:
+  last(leg(duty), arrival) - first(leg(duty), departure)
+
+Meaning:
+  Working time from first departure to last arrival within a duty.
+
+7) earliest, latest
+  • Synonyms for first and last
+
+8) next, prev
+  • Operand type: any
+  • Evaluates expression for the next/previous level object within the parent level
+  • If no such object exists: result is void
+
+Example 4:
+  departure - prev(leg(rtd), arrival)
+
+Meaning:
+  Ground time prior to a certain leg.
+
+9) is_first, is_last
+  • Like count: only a level argument
+  • Returns true if current level is the first/last within the parent level
+
+
+==================================================
+From, to, while and where
+==================================================
+
+Traversers can be combined with an optional traversal specification:
+  • from(...) and/or to(...)
+  • while(...)
+  • where(...)
+
+Purpose:
+  - start from a specific point, traverse to another point
+  - or traverse while a condition is true
+  - where filters which objects contribute to the result
+
+
+-------------------------
+Syntax
+-------------------------
+
+trav_spec ::=
+      from [towhile] [where]
+    | towhile [where]
+    | where [while]
+
+
+towhile ::= to | while
+
+
+where ::= where (expr)
+
+
+from ::=
+      from (trav_point [where])
+    | from (current)
+
+
+to ::=
+      to (trav_point [where])
+    | to (current)
+
+
+while ::= [direction] while (expr)
+
+
+direction ::= forwards | backwards
+
+
+trav_point ::= first | last | next | prev
+
+
+-------------------------
+Description / Rules
+-------------------------
+
+1) from + to ordering rule
+When from and to are used together, the from point must always precede the to point
+in the chain.
+
+Combinations where the order cannot be determined at compile time are not allowed.
+
+Accepted combinations:
+
+  from                               to
+  -------------------------------------------------
+  first                              anything
+  anything                           last
+  prev [where(expr)]                 prev
+  prev [where(expr)]                 current
+  current                            current
+  current                            next [where(expr)]
+  next                               next [where(expr)]
+  prev [where(expr)]                 next [where(expr)]
+
+
+2) Defaults
+Omitting:
+  • from  == from(first)
+  • to    == to(last)
+
+Example (not allowed):
+  from(first where(cond)) to(current)
+
+Reason:
+  the from point might occur after current.
+
+3) while
+Used to traverse while condition is true.
+Traversal stops when condition becomes false.
+
+Direction matters:
+  • forwards or backwards
+If direction is omitted, default is forwards.
+
+Default starting point behavior:
+  • If no from point is given, default start is first
+  • BUT if only a backwards while condition is specified,
+    default start is last
+
+4) where
+If where is included, only objects for which where(expr) is true are used
+by the traverser; others are skipped.
+
+Performance tip:
+For optimal performance, replace parts of a where condition with from/to/while
+whenever possible.
+
+Evaluation order:
+  while is evaluated BEFORE where (and before filters).
+
+Examples:
+
+Example A:
+  next(leg(rtd), departure) where(not deadhead) - arrival
+
+Meaning:
+  Time between the active leg and the departure of the next leg that is not a deadhead.
+
+Example B:
+  is_last(leg(rtd)) where(deadhead)
+
+Meaning:
+  true if the active leg is the last leg in the active duty that is a deadhead.
+
+Example C:
+  let this_departure = departure;
+
+  sum(leg(crr), %block_time%) from(current) forwards
+          while(departure < this_departure + 8:00);
+
+Meaning:
+  Sums block time in a time window of 8 hours.
+
+Note:
+A prev or next traverser can have a while condition if it also has a where condition.
+This can improve performance by aborting traversal early.
+
+Note (performance):
+The while condition is mainly used to terminate the traverser early and avoid
+unnecessary evaluations. while is always evaluated before where (or a filter).
+
+
+==================================================
+Void values
+==================================================
+
+Handling of void values is described in:
+  “Void values” (Data_Types.04.9.html#22072)
+
+==================================================
+The "to" operator
+==================================================
+
+The `to` operator is similar to a traverser, but it requires a one-to-one mapping
+transform as its first argument.
+
+What it does:
+  - It takes a data object in one context
+  - Maps it (1:1) to a corresponding data object in another context
+  - Evaluates the second argument (an expression) in that target context
+
+
+--------------------------------------------------
+Example
+--------------------------------------------------
+
+Instead of:
+
+  %ref_plan_work_time% =
+      max(plan_1_crew_first_activity, %tot_work_time%);
+      /* max of one value does not make sense */
+
+you can write:
+
+  %ref_plan_work_time% =
+      to(plan_1_crew_first_activity, %tot_work_time%);
+
+
+Interpretation:
+  - `plan_1_crew_first_activity` is a transform that points to “the corresponding crew
+    in reference plan 1” (a different context).
+  - `to(...)` uses that mapping to jump into that other context and compute `%tot_work_time%`
+    there, returning that result back to the original context.
+
+
+==================================================
+CARMSYS configuration
+==================================================
+
+An application must tell Rave (via the Rave configuration file) that a transform is
+allowed to be used with the `to` operator.
+
+Important:
+  - This configuration cannot be modified in CARMUSR.
+
+
+--------------------------------------------------
+Example configuration
+--------------------------------------------------
+
+Location:
+  $CARMSYS/data/crc/GPC/config.xml
+
+The key part:
+  - attribute `toSegment="true"` indicates the transform can be used with `to`.
+
+Example:
+
+  <Transform name="plan_1_crew_first_activity"
+    dependency="chain"
+    context="plan_1_sp_crew"
+    explosion="1"
+    toSegment="true"
+    function="crc_dom_segment_reference_plan_1_assignment">
+    <Remark text="The corresponding crew in reference plan 1"/>
+  </Transform>
+
+
+==================================================
+Iterators and contexts
+==================================================
+
+An expression is always computed inside an “environment” of objects
+(e.g., chains, trips, duties, legs).
+That environment can be changed/controlled using:
+  - iterators
+  - contexts
+  - transforms
+
+
+==================================================
+Iterators (what they are)
+==================================================
+
+Purpose:
+  - Used mainly in reports to split a group of objects into sub-groups.
+  - Objects inside each sub-group share certain properties defined by the iterator keys.
+
+Key points:
+  - Most iterators are defined in Rave language → users can add/modify them.
+  - Iterators can be used as traverser keys.
+
+
+Syntax: iterator as traverser key
+  trav_key ::= qual_iterator_ident
+
+Restriction:
+  - Iterators can only be used with order-independent traversers:
+      sum, avg, max, min, all, any, count
+  - Not allowed with:
+      while, from, to
+    because those require an ordered set.
+
+
+--------------------------------------------------
+Example 1 (Iterator): number of long sectors
+--------------------------------------------------
+
+  %number_of_long_legs% =
+     count(leg_set) where (%block% > 10:00);
+
+Explanation:
+  - `leg_set` splits the current environment into groups.
+  - In this iterator, each leg becomes its own group.
+  - `count(leg_set)` counts how many groups exist → effectively “how many legs”.
+  - The `where` filter keeps only groups that match (%block% > 10:00).
+  - Important nuance: a group “matches” if one arbitrary object in the group matches.
+    (Since each group has one leg here, that means “that leg matches”.)
+
+
+==================================================
+Contexts (what they are)
+==================================================
+
+Purpose:
+  - Used in expressions and reports to switch to a different environment of objects
+    than the initial one.
+
+Key points:
+  - Contexts are predefined.
+  - Users cannot modify contexts.
+
+
+Syntax: context expression
+  expr ::= context( context, expr )
+
+
+--------------------------------------------------
+Example 2 (Context): number of long legs in the sub-plan
+--------------------------------------------------
+
+  %number_of_long_legs% =
+    context(sp_crrs,
+      count(leg_set) where (%block% > 10:00));
+
+Explanation:
+  - Same idea as Example 1 (iterator + count + where),
+    but now you explicitly force the calculation environment first:
+      `sp_crrs` = “the legs of all trips in the sub-plan” (as described here).
+  - So you’re not relying on whatever environment happened to be active;
+    you define it.
+
+
+==================================================
+Built-in iterators (mentioned here)
+==================================================
+
+above(N)
+  - Returns the iteration group N steps above the current group.
+  - N can be any integer expression.
+
+atom_set
+  - Partitions each atom into its own group.
+
+times(N)
+  - Repeats the iteration N times (N is any integer expression).
+  - You can access the active index [1..N] via function: times_index
+  Example:
+    %bid_cost% =
+      sum(times(%number_of_bids%),
+          %crew_bid_cost%(times_index(0)));
+
+  Special note:
+    - Unlike other iterators, `times` IS ordered.
+    - Therefore it can be used with:
+        * a while statement
+        * first traverser + where
+        * cat traverser
+
+actual_leg_period / actual_chain_period
+  - Creates groups representing periods where legs/chains depart on days
+    with uniform (weekly repeating) frequency.
+
+chain_set
+  - Partitions each chain into its own group.
+
+crr_period_interval
+  - Creates groups representing “trip periods”, ensuring no periods intersect.
+  - If two trips’ periods would overlap, it splits into smaller non-overlapping intervals.
+  - One chain may belong to multiple groups.
+  - Trip period boundaries come from keywords:
+      crr_period_start_N, crr_period_end_N
+  - Functions:
+      interval_start, interval_end
+    return the current interval inside such a group, and void outside it.
+
+==================================================
+Transforms
+==================================================
+
+What a transform does
+---------------------
+Transforms let an expression “jump” from the current chain/leg context
+to level objects in OTHER chains that are related to the current leg/chain
+in some predefined way.
+
+Important:
+- Which transforms exist, and how chains relate, is decided by the application
+  (not by the user).
+
+
+Where you can use transforms
+----------------------------
+A transform can be used with order-independent traversers only:
+  sum, avg, max, min, all, any, count
+
+(So: transforms are in the same family as “iterator keys” usage:
+they work when order does not matter.)
+
+
+Two kinds of transform usage
+----------------------------
+1) Advanced transform (more powerful, slower)
+   - Returns a GROUP of objects (an iteration group).
+   - Then you traverse that group with an iterator/traverser.
+   - More overhead → slower.
+   - Recommended: try simple first.
+
+2) Simple transform (faster)
+   - Does NOT create explicit groups.
+   - Less overhead → faster.
+
+
+==================================================
+Syntax
+==================================================
+
+Advanced syntax
+  expr ::= transform(
+            transform_ident,
+            trav_ident( group )
+          )
+
+Simple syntax
+  expr ::= trav_ident( transform_ident )
+
+
+--------------------------------------------------
+Example 1
+--------------------------------------------------
+  transform(ac_rotations_ref, count(leg_set))
+  corresponds to:
+  count(ac_rotations_ref)
+
+Meaning:
+- Advanced form says: “apply transform ac_rotations_ref, then count legs using leg_set”
+- But it’s equivalent to the simple form:
+  “count directly over what ac_rotations_ref provides”
+
+
+==================================================
+Example 2 (count assigned crew on “equal legs”)
+==================================================
+
+  %assigned_crew% =
+    count(equal_legs) where (not void(crr_crew_id))
+
+Meaning (plain English):
+- `equal_legs` gives you all legs that belong to the SAME flight as the active leg.
+- `count(equal_legs)` counts how many such legs exist…
+- …but `where (not void(crr_crew_id))` keeps only those legs that have a crew id set.
+So the final number is:
+  “How many legs of this same-flight group have any crew assigned?”
+
+
+==================================================
+Example 3 (compare against a reference solution)
+==================================================
+
+Goal:
+- Check if a connection in the current solution also exists in a reference solution.
+
+Key transform:
+- `reference_tag` returns “identical legs” in a reference solution.
+
+Code:
+  %next_leg_match_reference% =
+    let next_flight  = next(leg(chain), flight_number),
+        next_transit = next(leg(chain), departure) - arrival,
+    any(reference_tag,
+        (next(leg(chain), flight_number) = next_flight)
+            and
+        (next(leg(chain), departure) - arrival = next_transit));
+
+How to read it:
+1) Save info from the current leg:
+   - `next_flight`  = flight number of the next leg in THIS chain
+   - `next_transit` = time between current arrival and next departure
+2) Look in the REFERENCE solution via `reference_tag`
+3) `any(...)` returns true if it finds at least one matching “reference leg”
+   where:
+   - next leg flight number matches `next_flight`
+   - connection time matches `next_transit`
+
+So result:
+- true  -> “Yes, this same connection exists in the reference”
+- false -> “No, it doesn’t”
+
+
+==================================================
+Performance note (from the text)
+==================================================
+- Advanced transforms: powerful but time consuming (group creation overhead).
+- Simple form: faster.
+Recommendation: try the simple transform first.
+
+==================================================
+Conditional expressions (if / then / else)
+==================================================
+
+What it is
+----------
+A conditional expression chooses between two values based on a boolean condition.
+
+Syntax
+------
+expr ::= if <expr> then <expr> else <expr>
+
+Rules (very important)
+----------------------
+1) The condition (the expr after `if`) MUST be boolean.
+   - It must evaluate to true/false.
+
+2) If the condition is true:
+     return the expression after `then`
+   Otherwise:
+     return the expression after `else`
+
+3) The `then` and `else` expressions MUST have the same type.
+   - And because of that, the whole `if ... then ... else ...` expression
+     has that same type too.
+
+So think of it like:
+--------------------
+result = (condition ? value_when_true : value_when_false)
+…but written in Rave’s style.
+
+Quick examples (illustrative)
+-----------------------------
+Boolean output:
+  if (%block% > 10:00) then true else false
+
+Integer output:
+  if (%is_deadhead%) then 0 else 1
+
+Time output (reltime):
+  if (departure < arrival) then (arrival - departure) else 0:00
+
+Key takeaway
+------------
+- Condition: boolean
+- Both branches: same type
+- Whole expression: that type
+
+==================
+Built-in Functions
+==================
+
+A number of built-in functions provide special services.
+Built-in functions return void if any of the arguments are void.
+
+
+SYNTAX
+------
+
+General syntax:
+
+  prim_expr ::= function [pexprs]
+              | void ( data_type )
+
+  function  ::= ident
+
+
+FUNCTION GROUPS
+---------------
+
+Built-in functions are grouped as follows:
+
+• Numerical functions
+• Time functions
+• Rule functions
+• Format functions
+• String functions
+• Void functions
+• Iterator functions
+• CAPI functions
+
+
+NUMERICAL FUNCTIONS
+-------------------
+
+abs(expr)
+  expr may be integer or reltime.
+  Returns the absolute value of expr.
+
+sqrt(expr)
+  Returns the integer square root of a positive integer.
+  A negative integer results in a runtime error.
+
+nmax(expr1, expr2, ...)
+nmin(expr1, expr2, ...)
+  Returns the largest / smallest argument.
+  At least two arguments are required.
+  All arguments must have the same type.
+
+
+TIME FUNCTIONS
+--------------
+
+Note:
+The beginning of a week is midnight between Sunday and Monday.
+
+overlap(start1, end1, start2, end2)
+  Arguments must all be abstime or all be reltime.
+  Returns the overlapping duration as reltime.
+
+scale_time(start, end, scale,
+           start1, end1, scale1,
+           start2, end2, scale2, ...)
+
+  Applies different weighting factors to different time intervals.
+  Useful for modeling extra compensation (e.g., night hours).
+
+  start/end      : abstime
+  startN/endN    : reltime
+  scale/scaleN   : integer
+
+Example 1:
+  %X% = scale_time(%start%, %end%, 0, 22:00, 06:00, 3);
+
+  %X% becomes the number of night hours (22:00–06:00)
+  within [%start%, %end%], multiplied by 3.
+
+Example 2:
+  %Y% = scale_time(%start%, %end%, 1,
+                   22:00, 02:00, 2,
+                   02:00, 06:00, 4);
+
+add_weeks(abstime, weeks)
+add_months(abstime, months)
+add_years(abstime, years)
+  Adds weeks/months/years to an absolute time.
+  Dates are rounded up if the result does not exist.
+
+round_down(value, step)
+round_up(value, step)
+  Rounds value to the nearest multiple of step.
+
+round_down_week(abstime)
+round_up_week(abstime)
+  Rounds to the nearest week boundary.
+
+round_down_month(abstime)
+round_up_month(abstime)
+  Rounds to the nearest month boundary.
+
+round_down_year(abstime)
+round_up_year(abstime)
+  Rounds to the nearest year boundary.
+
+round_down_offset(value, limit, offset)
+round_up_offset(value, limit, offset)
+  Like round_down / round_up, but with an offset.
+
+time_of_day(abstime)
+  Returns time since midnight (0:00–23:59).
+
+time_of_week(abstime)
+  Returns time since start of week (0:00–167:59).
+
+time
+  Returns the local absolute time.
+
+
+RULE FUNCTIONS
+--------------
+
+total_rule_penalty
+  Returns the sum of all rule penalties on the current chain.
+
+rulefailure
+  Returns true if any rule fails.
+
+rule_failure(name)
+  Returns true if the specified rule fails.
+
+rule_on(rule_name)
+  Returns true if the rule or constraint is enabled.
+
+current_rule_id
+  Returns the name of the rule currently being evaluated.
+  Returns void if not called inside a rule.
+
+
+FORMAT FUNCTIONS
+----------------
+
+Used together with Rave Publisher PDL.
+
+format_time(time, format_string [, locale])
+
+  Formats abstime or reltime into a string.
+
+Format specifier:
+  %[flags][width]conversion_character
+
+Conversion characters:
+  y  year (0–99)
+  Y  full year
+  m  month (1–12)
+  d  day (1–31)
+  j  day of year (1–366)
+  H  hour (0–23)
+  I  hour (1–12)
+  h  unlimited hour
+  p  AM / PM
+  M  minute (0–59)
+  w  weekday (1–7)
+  W  week number (1–52)
+  a  abbreviated weekday
+  A  full weekday
+  b  abbreviated month
+  B  full month
+  %  percent
+  n  newline
+  t  tab
+
+Flags:
+  -  left-justify
+  0  pad with zeros
+  u  uppercase
+  l  lowercase
+
+Example:
+  format_time(May 5 1994 15:40,
+              "Test: %Y-%02m-%02d %j %H:%02M %W %a %B %h",
+              "sv")
+
+Result:
+  Test: 1994-05-05 125 15:40 18 Tor Maj 73119
+
+
+format_int(integer, format_string)
+
+  Formats an integer as a string.
+
+Format syntax:
+  %[prefix][width][thousand separator][decimal separator]{d|i}
+
+Prefixes:
+  -   left justify
+  +   always show sign
+  (space) blank for positive
+  0   pad with zeros
+
+Examples:
+  format_int(123, "x=%4d")        -> "x= 123"
+  format_int(123, "x=%-4d")       -> "x=123 "
+  format_int(123, "x=%+04d")      -> "x=+123"
+  format_int(123, "x=%04d")       -> "x=0123"
+  format_int(123, "x=%d %% y=%+i")-> "x=123 % y=+123"
+
+
+STRING FUNCTIONS
+----------------
+
+locate(pattern, text [, start])
+  Returns the first position of pattern in text.
+  Returns 0 if not found.
+
+Example:
+  locate("men", "Carmen") -> 4
+
+substr(s, start, length)
+  Returns a substring.
+  Returns empty string if start is out of range.
+
+Example:
+  substr("abcdefg", 3, 2) -> "cd"
+
+length(s)
+  Returns the number of characters.
+
+Example:
+  length("abc") -> 3
+
+concat(s1, s2, ..., sn)
+  Concatenates strings (max 4095 characters).
+
+Example:
+  concat("Carmen", " ", "Systems") -> "Carmen Systems"
+
+msgr(string | concat(...))
+  Marks strings for translation via gettext.
+
+msgx(string)
+  Marks strings for translation (no lookup).
+
+string_to_int(string)
+  Converts a string to an integer.
+  Returns void on failure.
+
+Examples:
+  string_to_int("0")         -> 0
+  string_to_int("-498780")   -> -498780
+  string_to_int("2147483648")-> VOID
+  string_to_int(" 3456 ")    -> 3456
+
+
+VOID FUNCTIONS
+--------------
+
+void(expr)
+  Returns true if expr is void.
+
+default(expr1, expr2)
+  Returns expr1 if not void, otherwise expr2.
+
+void(type)
+  Returns a void value of the specified type.
+
+void_bool
+void_int
+void_abstime
+void_reltime
+void_string
+
+
+ITERATOR FUNCTIONS
+------------------
+
+index[(N)]
+  Returns the loop index in reports.
+
+times_index(N)
+  Returns index for times iterators.
+
+interval_start
+interval_end
+  Used with interval iterators.
+
+
+CAPI FUNCTIONS
+--------------
+
+Support for Common Alertness Prediction Interface (CAPI).
+
+capi_legs
+  Returns one prediction value per leg.
+
+capi_time(abstime)
+  Returns one prediction value per chain and time.
+
+NOTE:
+CAPI definitions must reside in a Rave rule set module named "capi".
+
+=====
+Range
+=====
+
+Definition
+----------
+
+If the dependency of an expression can be seen as the object for which the calculation is done,
+the range of an expression is the lowest level that includes all objects that may affect the
+expression.
+
+In other words, the range indicates how much of a chain a calculation uses.
+
+
+Example
+-------
+
+1) Dependency = leg, Range = leg
+
+  %block_time% = arrival - departure;
+
+Explanation:
+This calculation only needs data from the current leg, so both dependency and range are "leg".
+
+
+2) Dependency = leg, Range = duty
+
+  %leg_cxn_time% = next(leg(duty), departure) - arrival;
+
+Explanation:
+This is still a "leg" expression (it produces a value per leg), but it depends on information
+that spans the duty (because it looks at the “next leg within the duty”).
+So, whenever the duty changes, this expression must be reevaluated.
+
+
+Performance note
+----------------
+
+When performance is vital (for example, when Rave is used for optimization), it is recommended
+to model the problem so that expressions and rules get as narrow ranges as possible.
+
+A leg rule with a range that includes the whole chain will decrease performance. Such a rule
+will be rechecked on each leg in the chain, even if only a small part of the chain has been
+modified, because the optimizer checks rules and modifies chains iteratively.
+
+
+See also
+--------
+
+• Dependencies and objects
+• Improving the performance of Rave code
+
+===========
+Definitions
+===========
+=======================
+Variables and Functions
+=======================
+
+A variable or function allows a Rave programmer to define the necessary steps to compute a
+desired value. Complex rule sets are usually built in layers, where complex definitions are
+expressed in terms of simpler ones.
+
+Top-level variables are ultimately used inside rules for legality checking. They are also used
+in reports (report writer) or to provide information for other parts of the system (for example,
+as system parameters).
+
+A definition can take one of three basic forms:
+  • an expression
+  • a parameter
+  • a table value  (see also: Tables)
+
+
+Topics in this section
+----------------------
+
+• Expression
+• Data type
+• Parameters
+• Local variables
+• Remark
+
+
+EXPRESSION
+----------
+
+General syntax for a variable definition:
+
+  var_def ::= gexport [durable] var_ident [pformal_args] =
+                [ local_var ]
+                var_body
+                [ remark ] ;
+
+  var_ident ::= % <one or more characters, % is not legal> %
+
+  var_body ::= expr
+
+If there are any arguments, this is called a function definition; otherwise it is called a
+variable definition.
+
+NOTE:
+All arguments must be explicitly typed, and if any argument is void the function returns void.
+
+The var_ident is the name of the defined variable or function.
+
+
+Function arguments (formal arguments) syntax:
+
+  pformal_args ::= ( formal_args )
+
+  formal_args  ::= formal_args , formal_arg
+                 | formal_arg
+
+  formal_arg   ::= data_type ident
+
+A variable/function can include locally named expressions (see “Local variables”).
+
+See also:
+  • Durable caches for variables
+
+
+DATA TYPE
+---------
+
+Each variable or function has a data type. The type comes from the expression defining the
+variable and is automatically inferred by Rave (no manual typing required for the variable itself).
+
+The expression must be internally consistent for Rave to accept the definition. Every expression
+that uses the variable is also checked for consistency. Each mismatch results in a Rave error.
+
+Examples:
+
+  /* Int Variable */
+  %number_of_deadheads% = count(leg(trip)) where (deadhead);
+
+  /* Bool Variable */
+  %connection_ok% = %connection_time% > 1:00;
+
+  /* String Variable */
+  %nightstop_station% = last(leg(duty), arrival_airport_name);
+
+  /* Reltime Variable */
+  %block_time% = arrival - departure;
+
+  /* Abstime Variable */
+  %duty_end% = last(leg(duty), arrival) + 1:00;
+
+  /* String Function, with String argument */
+  %operates_on%(String day) =
+      locate(day, days_of_operation) > 0;
+
+
+PARAMETERS
+----------
+
+Parameters let you tune certain values in a rule set from a menu while the system is running,
+without recompiling the rule set.
+
+Parameter settings can be stored together with plans, providing an individualized rule set.
+
+Parameter syntax:
+
+  par_def ::= gexport [durable] var_ident =
+                par_body
+                [ remark ] ;
+
+  par_body ::= parameter par_const [par_limit]
+
+Parameters can be limited with a minimum and/or maximum allowed value.
+
+Limits syntax:
+
+  par_limit ::= minvalue par_const
+              | maxvalue par_const
+              | minvalue par_const maxvalue par_const
+              | maxvalue par_const minvalue par_const
+
+  par_const ::= sign_const
+
+Meaning:
+- par_const in par_body is the default value when the rule set is first loaded.
+- The min/max constants define the allowed range; runtime checks new values against them.
+
+Example:
+
+  %briefing% = parameter 1:00 minvalue 0:50 maxvalue 2:00;
+
+
+LOCAL VARIABLES
+---------------
+
+A variable/function definition may optionally contain local variables.
+
+Local variable syntax:
+
+  local_var ::= let lets ;
+
+  lets      ::= lets , let
+              | let
+
+  let       ::= ident = expr
+
+Rules/behavior:
+- Each ident in the let-block introduces a new local variable.
+- Local variables can be used only inside the main definition (nowhere else).
+- Earlier local variables can be used when defining later local variables.
+
+IMPORTANT:
+Local variables are evaluated immediately.
+If ANY local variable evaluates to void, the whole definition becomes void,
+even if those locals are not used later.
+
+Local variables are computed in the order they are given. Whenever a local variable appears in
+an expression, its value is substituted as if it were a constant.
+
+They are not just shorthand—they enable functionality not otherwise available.
+
+
+Example:
+
+  %work_time_24h% =
+      let start = %duty_start%,
+          stop  = start + 24:00;
+      sum(duty(trip),
+          overlap(%duty_start%, %duty_end%, start, stop))
+          from(current) while(%duty_start% <= stop);
+
+Related definitions used in the example:
+
+  %duty_start% =
+      first(leg(duty), departure) - %briefing%;
+
+  %duty_end% =
+      last(leg(duty), arrival) + %debriefing%;
+
+  %briefing% =
+      parameter 0:45;
+
+  %debriefing% =
+      parameter 0:30
+
+Explanation of what happens when %work_time_24h% is calculated:
+• start gets the current duty’s %duty_start%
+• stop gets start + 24:00
+• sum(duty(trip), ...) traverses duties that touch the 24h window, starting at the current duty
+  and moving forward while duties remain in the time window
+• Each overlap(...) call uses changing %duty_start% and %duty_end% for each duty visited,
+  while local variables start and stop remain constant for the whole traversal
+• The result of sum(...) is the value of %work_time_24h%
+
+This value could not have been calculated without local variables.
+
+
+REMARK
+------
+
+Definitions such as parameters and rules can include a remark string.
+Remarks are used for presentation to the planner/end user (legality check output, parameter forms).
+
+A remark can have multiple sections, e.g.:
+- brief description (plain language name)
+- a more detailed section for the planner
+The available documentation roles are configurable.
+
+Remark syntax:
+
+  remark       ::= remark role_remarks
+
+  role_remarks ::= role_remark , role_remarks
+                 | role_remark
+
+  role_remark  ::= [role] [+] string
+
+  role         ::= ident
+
+The '+' in role_remark can be used to extend a comment when redefining a variable.
+
+Example:
+
+  %max_duties_in_trip% = parameter 2
+    remark "Maximum number of Duties in a Trip",
+    planner "Controls trip length according to GTP18 paragraph";
+
+You can include line breaks and indents in a remark using:
+  \n  (newline)
+  \t  (tab)
+
+See also: String
+
+=====
+Rules
+=====
+
+Rules are the main tools for legality checking. When a legality check is started from an
+application, all rules are tried. Depending on how a rule is defined, what object-chain it is
+applied to, and how many objects exist on each level, one rule may be applied many times
+(or not at all). This repetition is handled automatically by Rave.
+
+Legality checks can originate from several places:
+- Automatic planning: many checks on partial solutions, guiding search/optimization
+- Manual planning: background checks to warn the user ASAP about violations
+
+
+Topics covered
+--------------
+
+• Syntax
+• Repetition
+• Turning rules on or off
+• Validity statements
+• Rule exceptions
+• Rule hierarchies
+• Penalties and quality rules
+• Rule violation cost
+• Messages (failtext)
+• Rule failures
+
+
+SYNTAX
+------
+
+Rule definition (BNF-style):
+
+  rule_def ::= gexport rule [ponoff] rule_name =
+                 [ valid ; ]
+                 ( exception ; )*
+                 rule_condition ;
+                 [ delta ; ]
+                 [ cost = expr ; ]
+                 [ max_penalty ; ]
+                 [ min_penalty ; ]
+                 [ failtext ; ]
+                 [ failobject ; ]
+                 [ severity ; ]
+                 [ deadline ; ]
+                 [ overshoot_min_limit ; ]
+                 [ overshoot_max_limit ; ]
+                 [ remark ; ]
+               end
+
+  rule_name      ::= ident
+  rule_condition ::= expr inequality expr
+
+NOTE:
+Statements inside a rule can appear in any order.
+
+Meaning:
+- rule_name is the identifier of the rule.
+- rule_condition is any boolean expression and is the ONLY mandatory part of the rule.
+
+Example:
+
+  rule not_too_many_landings =
+      %number_of_landings% <= 5;
+  end
+
+Guideline:
+Write rules so they don’t get violated just because a trip is incomplete.
+Example idea: if a 10-leg rotation is legal, then the first 5 legs should also be legal.
+(Important because rotations are built incrementally in both manual and automatic planning.)
+
+Void behavior:
+If rule_condition evaluates to void, the rule is regarded as legal.
+
+
+REPETITION
+----------
+
+Like expressions, a rule has a dependency (it belongs to a certain object level).
+The rule is evaluated for ALL objects at that level.
+
+Rave computes the rule’s dependency automatically by looking at the expressions used in the rule.
+
+Example:
+
+  rule connection_ok =
+      next(leg(duty), departure) - arrival > 1:00;
+  end
+
+This repeats for all leg objects (because the expression has leg dependency).
+
+
+TURNING RULES ON OR OFF
+-----------------------
+
+Syntax:
+
+  ponoff ::= ( (on | off) )
+
+Rules can be enabled/disabled from a menu during a planning session:
+- No recompile needed
+- No reload needed
+- Disabled rule is ignored during legality checking
+- When a rule set loads, all rules are enabled by default
+- Optional ponoff sets the INITIAL state
+
+Example:
+
+  rule (off) A_rule =
+      %Number_of_landings% <= 5;
+  end
+
+To check if a rule is enabled:
+- use built-in function rule_on()  (see “Rule functions”)
+
+
+VALIDITY STATEMENTS
+-------------------
+
+A rule may include a validity statement to restrict when it applies.
+
+Syntax:
+
+  valid ::= [ valid expr ; ]
+
+If the valid expression is void or false, the rule is ignored.
+
+Example:
+
+  rule not_too_many_landings =
+      VALID %shorthaul%;
+      %number_of_landings% <= 5;
+  end
+
+Meaning: checked only when %shorthaul% is true.
+
+Combined evaluation table (validity + condition)
+(From the doc’s example: VALID %shorthaul%; condition: %number_of_landings% <= 5)
+
+- If %shorthaul% is true:
+    • condition true  -> legal
+    • condition false -> illegal
+    • condition void  -> legal
+- If %shorthaul% is false or void:
+    • rule is ignored (regardless of condition result)
+
+
+RULE EXCEPTIONS
+---------------
+
+Rule exceptions relax or completely ignore a rule for a specific time period and crew.
+
+You model the interval by defining the rule’s start and/or end time.
+- Dates are specified as abstimes.
+
+Exception syntax:
+
+  exception ::= startdate = expr ;
+              | enddate   = expr ;
+              | startday  = expr ;
+              | endday    = expr ;
+
+Example concept:
+An external table can define exceptions, e.g. crew 37642 is allowed 3 extra “wop duty days”
+for the wop starting 10Feb2005.
+
+Example usage in a rule:
+
+  rule max_wop_duty_days =
+      startdate = wop.%start%;
+      wop.%days% <=
+          %max_wop_days% +
+          %exception_overshoot_int%(wop.%start%);
+  end
+
+Example exception table definition:
+
+  table rule_exceptions(Abstime SDate) =
+      crr_crew_id, current_rule_id, SDate ->
+          Bool    %rule_turned_off%,
+          Int     %exception_overshoot_int%,
+          Reltime %exception_overshoot_rel%;
+      external "SpLocal/RuleExceptions";
+      CrewId, RuleId, Sdate -> turnoff, OverInt, OverRel;
+      -,-,- -> false, 0, 0:00;
+  end
+
+Note:
+startdate needs to be defined for rules that use rule exceptions (the rule uses it to look up
+the relevant exception record).
+
+
+RULE HIERARCHIES
+----------------
+
+Rules can be grouped into a hierarchy using “parent rules”.
+Parent rules contain no real condition of their own; they reference other rule(s).
+
+Parent rule syntax:
+
+  parent_rule_def ::= gexport rule [ponoff] rule_name =
+                        [ valid ; ]
+                        [module .] rule_name is legal ;
+                        [ remark ; ]
+                      end
+
+Behavior:
+- Parent rule may be enabled/disabled (ponoff).
+- If a parent is disabled, all its sub-rules are automatically disabled.
+- You can still explicitly enable a sub-rule even if the parent is disabled.
+- Parent may have validity; it is inherited by all sub-rules.
+
+Example 1:
+
+  rule Main_rule =
+      Sub_rule_1 is legal;
+      Sub_rule_2 is legal;
+  end
+
+  rule Sub_rule_1 =
+      %X% = 7;
+  end
+
+  rule Sub_rule_2 =
+      %Y% > 5;
+  end
+
+Multiple parents:
+- A rule may have multiple parent rules (overlapping groups).
+- If ALL parents are disabled, the rule is turned off.
+- A rule inherits validity statements from all its parents.
+- The disjunction must be true for the rule to apply:
+  if ANY parent is valid, the sub-rule is valid.
+
+Example 2 (idea):
+FD_r1 can be shared by both FD_longhaul and FD_shorthaul; which sub-rules are valid depends
+on which parent’s VALID condition is true.
+
+
+PENALTIES AND QUALITY RULES
+---------------------------
+
+Typical rule condition form:
+
+  something1  inequality  something2
+
+Hard limit example:
+
+  rule a_rule =
+      %something% <= 2:45;
+  end
+
+Meaning: 2:45 allowed, 2:46 illegal (exact boundary).
+
+To “soften” the limit, define a penalty value:
+- Penalty increases as expression value approaches the limit.
+- Optimizers can use penalty to improve solution quality.
+
+Inequality operators:
+
+  inequality ::= <= | < | > | >=
+
+Penalty-related constants (optional):
+- delta
+- min_penalty
+- max_penalty
+
+Syntax:
+
+  delta       ::= delta = ( _ | NUMBER | reltimeconst )
+  min_penalty ::= min_penalty = ( _ | NUMBER )
+  max_penalty ::= max_penalty = ( _ | NUMBER )
+
+Penalty example:
+
+  rule a_rule =
+      %something% <= 2:45;
+      delta       = 0:15;
+      min_penalty = 50;
+      max_penalty = 100;
+  end
+
+Meaning (linear penalty):
+- If %something% > 2:45 -> illegal
+- If within delta (15 minutes) of the limit, you get a penalty that grows linearly
+  up to max_penalty at the limit
+
+Examples given:
+  %something% = 2:30  penalty_value = 50
+  %something% = 2:31  penalty_value = 53
+  %something% = 2:45  penalty_value = 100
+  %something% = 2:46  Rule failure
+
+Note:
+Built-in total_rule_penalty can include rule penalties in a cost function.
+
+
+RULE VIOLATION COST
+-------------------
+
+Cost-based heuristic optimizers require each rule to have a “cost” for violating it.
+Typical approach:
+- Very high costs for severe infeasibilities
+- Much lower costs for minor operational issues (e.g., revenue loss)
+
+Example pattern:
+
+  %infeasibility_cost% = 10000000;
+
+  rule inconsistency_rule =
+      activity_end_station <>
+          next(leg(chain), activity_start_station);
+      cost = %infeasibility_cost%;
+  end
+
+  rule overlap_rule =
+      activity_end_time <= next((chain), activity_start_time);
+      cost = 2 * %infeasibility_cost%;
+  end
+
+  rule route_rule =
+      valid %gps_broken%;
+      %dont_fly_over_water%;
+      cost = 2000;
+  end
+
+Compiler behavior:
+- If compiling for an optimizer that requires rule costs, the compiler forces you to define
+  costs for all rules.
+- If the optimizer doesn’t use costs, any cost you define is ignored.
+
+
+MESSAGES (FAILTEXT)
+-------------------
+
+Besides remarks, you can add rule failure messages for report generation.
+They can also be used for constraints.
+
+Syntax:
+
+  failtext ::= failtext expr
+             | failtext(lhs, rhs) = expr ;
+
+  lhs ::= formal_arg
+  rhs ::= formal_arg
+
+Note:
+lhs and rhs correspond to the left-hand and right-hand expressions in the rule/constraint
+condition (types must match).
+
+Example:
+
+  rule max_trip_duty_days =
+      trip.%days% <= %max_trip_days%;
+      failtext concat("Not allowed to have ",
+          format_int(trip.%days%, "%i "),
+          "in one trip.");
+  end
+
+
+RULE FAILURES (OPTIONAL ATTRIBUTES)
+-----------------------------------
+
+Some optional attributes are related to rule failures; how they’re used depends on the application:
+
+- failobject: string used to locate info about the chain that caused a failed legality check
+- severity: integer severity level
+- deadline: AbsTime deadline for attending to the failure (often used in crew tracking)
+- overshoot_min_limit: Int or RelTime lower limit for rule relaxation (used when excepting)
+- overshoot_max_limit: Int or RelTime upper limit for rule relaxation (used when excepting)
+
+===========
+Constraints
+===========
+
+Overview
+--------
+
+Constraints are a special type of rule designed to integrate tightly with optimizers that have
+built-in constraint-handling capabilities, while still behaving like ordinary legality checks
+in applications that do not support constraints natively.
+
+From a modeling point of view:
+- Constraints behave like rules for legality checking
+- Optimizers can exploit extra structure (sum, count, cost, nonadditive)
+- Differences between applications are handled internally by the constraint construct
+
+
+Topics covered
+--------------
+
+• Syntax  
+• Condition  
+• Foreach  
+• Nonadditive  
+• Cost  
+• Constraint failtext  
+
+
+SYNTAX
+------
+
+General constraint definition:
+
+  constraint_def ::= gexport constraint [ponoff] constr_name =
+                       [ valid ; ]
+                       ( foreach ; )*
+                       constr_condition ;
+                       [ nonadditive(formal_args) = expr ; ]
+                       [ cost [(expr)] = expr ; ]
+                       [ failtext ; ]
+                       [ remark ; ]
+                       [ group_def ]
+                     end
+
+Key points:
+- constraint identifies a new constraint
+- constr_name is the constraint identifier
+- ponoff sets initial on/off state (can be changed at runtime)
+- rule_on() can be used to check if a constraint is enabled
+- valid and failtext behave exactly like in rules
+- end marks the end of the constraint body
+
+Restrictions:
+- If a constraint is level-dependent, only the left-hand side of the condition may depend on
+  objects outside that level.
+- Chain constants (e.g. homebase) count as external dependencies.
+
+Groups inside constraints:
+- Can contain any Rave definition
+- Used as optimizer hints (not semantic changes)
+
+
+CONDITION
+---------
+
+The only mandatory part of a constraint is the condition.
+
+Allowed condition forms:
+
+  sum(c_set, expr) [where (expr)] c_op expr
+  count(c_set)     [where (expr)] c_op expr
+
+Where:
+- c_op ::= <= | >= | =
+- c_set ::= application-defined context or transform
+- where clause is optional
+
+Notes:
+- sum and count are traversers
+- The traversed data must come from an application-defined context or transform
+
+Example:
+
+  constraint max_inexperienced =
+    valid leg.%is_flight_duty%;
+    count(equal_legs) where (crew.%is_inexperienced%) <= 1;
+  end
+
+Meaning:
+At most one inexperienced crew member is allowed on a flight leg.
+
+Terminology:
+- Global constraint: data comes from a context
+- Vertical constraint: data comes from a transform
+
+Level aliasing:
+If a transform refers to a user-defined level name, it must be aliased to a real level, e.g.:
+
+  level trip_defined_in_ruleset = level.trip;
+
+
+FOREACH
+-------
+
+foreach allows generating multiple similar constraints that differ only by one variable.
+
+Example:
+
+  constraint head_constraint_crew =
+    foreach day in set(1, %days_in_planning_period%);
+    sum(sp_crew_chains, %trip_unass%(day)) <= %max_heads%;
+    failtext %head_failtext%(day,false);
+  end
+
+Explanation:
+- Creates one constraint per day
+- day is a loop variable available inside expressions
+
+General syntax:
+
+  foreach ::= foreach lvar in foreach_set
+              [alias(expr)]
+              [where(expr) | while(expr)]
+
+foreach_set may be:
+- a set
+- an enum
+- a range (set(start, end [, step]))
+
+Rules:
+- Multiple foreach clauses are allowed (multi-dimensional constraints)
+- Loop variables must be unique
+- Later foreach expressions may refer to earlier loop variables
+- foreach expressions must NOT return void
+
+Alias:
+- alias(expr) is only for presentation
+- Does not affect semantics or optimization
+
+
+MORE ABOUT RANGES
+-----------------
+
+Range syntax:
+
+  set(start, end)
+  set(start, end, step)
+
+Supported element types:
+- Enum
+- Int
+- Reltime
+- Abstime
+
+Rules:
+- start, end, step must have compatible types
+- For Abstime sets, step is a Reltime
+- Default step:
+  - 1 for Int
+  - 0:01 for Reltime/Abstime
+- step = 0 is an error
+- step not allowed for Enums
+
+Empty ranges occur if:
+- start > end and step > 0
+- start < end and step < 0
+
+Examples:
+
+  set(1,5)       -> 1,2,3,4,5
+  set(1,5,3)     -> 1,4
+  set(3,0,-1)    -> 3,2,1,0
+  set(3,0)       -> empty
+  set(1,5,-1)    -> empty
+
+Warning:
+Abstime ranges without a step can become very large.
+
+
+NONADDITIVE
+-----------
+
+nonadditive is an optimizer hint that provides extra structure information.
+It does NOT change constraint semantics.
+
+It defines a local function that can be used in the condition.
+
+Example:
+
+  constraint muc_4_day_trips =
+    sum(sp_crrs, nonadditive(homebase, %trip_nr_of_days%)) <= 2;
+    nonadditive(String base, Int days) =
+      if base = "MUC" and days = 4 then 1 else 0;
+    cost = 10000;
+  end
+
+Purpose:
+- Helps optimizers reason about constraint structure
+- Improves optimization performance
+
+
+COST
+----
+
+By default:
+- If a constraint condition is false → solution is illegal
+
+You can allow violations by assigning a cost.
+
+Two cost types:
+
+1) Linear cost
+
+  cost = expr_lin_cost;
+
+2) Binary cost
+
+  cost(when max expr_max_violation) = expr_bin_cost;
+
+Violation:
+- Absolute difference between LHS and RHS
+- For Reltime: difference in minutes
+
+Legality conditions:
+A constraint is legal if:
+- violation = 0, OR
+- it has a linear cost, OR
+- it has a binary cost AND violation <= max violation
+
+Cost calculation:
+- No cost       -> always 0
+- Linear cost   -> expr_lin_cost * violation
+- Binary cost   -> expr_bin_cost if violation <= limit, else 0
+
+Constraints:
+- Cost expressions must return Int
+- Cost expressions cannot return void
+- Some applications require costs; others ignore them
+
+Example (linear cost):
+
+  constraint jap_speaker_constraint =
+    valid language.%jap_speakers_required% > 0;
+    sum(equal_legs, %num_jap_speakers%) >=
+        language.%jap_speakers_required%;
+    cost = %GLC_jap_speaker_cost_parameter%;
+  end
+
+Example (binary cost):
+- 0–1 inexperienced crew: legal
+- 2–3 inexperienced crew: legal with cost
+- >3 inexperienced crew: illegal
+
+
+CONSTRAINT FAILTEXT
+-------------------
+
+Constraints can define failtext messages, similar to rules.
+
+Syntax supports typed lhs/rhs arguments that match the condition sides.
+
+Example:
+
+  constraint four_day_trips_per_base =
+    foreach base in active_bases;
+    sum(sp_crrs, nonadditive(homebase, %caldays%)) <=
+        %long_trip_limit%(base);
+    nonadditive(String a_base, Int caldays) =
+        if a_base = base and caldays = 4 then 1 else 0;
+    cost = 10000;
+    failtext(Int lhs, Int rhs) =
+      concat(format_int(lhs,"%i"),
+             " long trips on base ",
+             base,
+             ", exceeds ",
+             format_int(rhs,"%i"));
+  end
+
+
+======
+Tables
+======
+
+Overview
+--------
+
+Variables and functions can select values using if–then–else expressions, but this becomes
+tedious and inefficient when many outcomes exist. Tables provide a declarative way to list
+test cases and corresponding results.
+
+Tables can be:
+- Internal tables: test cases and results are defined inside the rule set
+- External tables: test cases and results are loaded from an external file or database
+
+External tables are loaded at runtime the first time they are accessed.
+
+
+Topics in this section
+----------------------
+
+• Syntax
+• Internal tables
+• External tables
+• External part of external tables
+• Special field names
+• Aggregation of values in result rows
+• Intervals
+• Void/null values in external tables
+
+
+SYNTAX
+------
+
+Common syntax for tables:
+
+  table table_name [arguments] =
+      [alias local_definitions ;]
+      conditions -> result_variables ;
+      table_content
+  end
+
+Notes:
+- Aliases are optional and only usable inside conditions and results (not in test cases)
+- Alias expressions are evaluated only if needed
+- All conditions are evaluated before matching rows
+- If any condition fails, all result variables become void
+
+
+Result variables
+----------------
+
+Result variables determine what the table produces.
+
+Rules:
+- Result variables may be exported
+- Types are optional for internal tables
+- Types are mandatory for external tables
+- If the table has arguments, all result variables become functions with the same arguments
+
+
+TABLE CONTENT
+-------------
+
+The table content differs between internal and external tables:
+
+- Internal tables use clusters of rows
+- External tables reference an external data source
+
+
+INTERNAL TABLES
+---------------
+
+Internal tables consist of clusters.
+Each cluster contains rows.
+Each row contains:
+- One test case per condition
+- One outcome per result variable
+
+Row order does not matter.
+
+Uniqueness rule:
+- Rows must not overlap (no two rows may match the same input)
+- Exception: a default row
+
+Default row:
+- A row with only wildcards (-)
+- Used if no other row matches
+- If no row matches and no default exists → runtime error
+
+Clusters:
+- Allow ordered matching
+- Rows must be non-overlapping within each cluster
+- Clusters are tried sequentially
+- Only the last cluster may contain a default row
+
+Test case forms:
+- Constant value
+- Wildcard: "-"
+- Boolean shortcuts: y / n (true / false)
+- Ranges
+- Inequalities
+- Combined inequalities (and / or)
+
+
+Test case syntax (conceptual)
+-----------------------------
+
+• "-"            : matches anything
+• y / n          : true / false
+• (a,b)          : inclusive range
+• )a,b(          : exclusive range
+• <, <=, >, >=   : relational operators
+• <>             : not equal
+• Combined forms using AND / OR
+
+
+Outcomes
+--------
+
+Each outcome is either:
+- An expression
+- "-" (meaning the corresponding result variable becomes void)
+
+
+Internal table example
+----------------------
+
+  table A_table =
+      %Flying_time%, deadhead -> %A_variable%;
+      <= 1:00       , y -> 2;
+      )1:00,3:00)   , y -> 4;
+      > 3:00        , y -> 6;
+      <= 1:00       , n -> 3;
+      )1:00,3:00)   , n -> 5;
+      > 3:00        , n -> 7;
+  end
+
+
+EXTERNAL TABLES
+---------------
+
+External tables are intended for data that changes over time.
+
+Behavior:
+- Loaded when first accessed
+- Reload rule set after external updates
+- Failure to load → runtime error
+
+Restrictions:
+- No aliases
+- No wildcards
+- No ranges in rule set
+- Test cases must be constants
+- Missing match without default → runtime error
+
+
+External table declaration
+--------------------------
+
+  table table_name =
+      conditions -> typed result_variables;
+      external "external_source";
+      pattern_fields -> result_fields;
+      [default_row]
+      [remark]
+  end
+
+Notes:
+- Specifying data type after `external` is obsolete
+- Preferred: specify types on result variables
+
+
+External file
+-------------
+
+The external source may be:
+- A file
+- A database (if supported)
+
+Default file name:
+- table_name.etab
+- Located in system-defined directories
+
+
+External file format
+--------------------
+
+Example structure:
+
+  NofFields
+  TypeName1,
+  TypeName2,
+  ...
+  Val11, Val12, ...;
+  Val21, Val22, ...;
+  ...
+
+Type codes:
+- B : Bool
+- I : Int
+- R : Reltime
+- A : Abstime
+- E : Enum
+- S : String
+
+Notes:
+- Strings use double quotes
+- Each value ends with a comma
+- Records end with comma or semicolon (semicolon recommended)
+- File must end with newline
+- Comments allowed:
+  // line comment
+  # line comment
+  /* block comment */
+
+
+Type compatibility
+------------------
+
+Declared Rave types must be compatible with external types:
+
+- Bool     ← Bool or Int
+- Int      ← Int
+- Reltime  ← Reltime
+- Abstime  ← Abstime or Int
+- Enum     ← Enum
+- String   ← String
+
+
+SPECIAL FIELD NAMES
+-------------------
+
+row_number
+----------
+- Virtual column generated by Rave
+- Enumerates rows: 1..n
+- Type: Int
+- If external file defines row_number explicitly, it overrides the virtual one
+
+Uses:
+- Lookup by index
+- Row existence checks
+- Aggregations (count, any)
+
+match_number
+------------
+- Enumerates matching rows only
+- Starts at 1
+- Can only be used as a pattern field
+- Cannot be used in ranges or inequalities
+
+
+AGGREGATION IN RESULT ROWS
+--------------------------
+
+If multiple rows match:
+- Default behavior: first match is returned
+- To combine results, use traversers
+
+Supported traversers:
+- sum, avg, max, min
+- all, any, count
+- first, last, cat
+
+Rules:
+- Cannot mix traversed and non-traversed result fields
+- Cannot define a default row when using traversers
+
+Traverser behavior with zero matches:
+- sum    → 0
+- count  → 0
+- any    → false
+- all    → true
+- min/max/avg → void
+
+
+INTERVALS
+---------
+
+External tables can match intervals using fields:
+
+Examples:
+- ("from","to")      → inclusive interval
+- < field
+- <= field
+- > field
+- >= field
+- <> field
+
+Interval matching requires:
+- Condition value compared against external table fields
+- Both bounds satisfied depending on syntax
+
+
+VOID / NULL VALUES
+------------------
+
+Representation:
+- File-based tables: keyword `void`
+- Database tables: NULL
+
+Rules:
+- Void values allowed in result columns
+- Void values allowed in interval bounds
+- Lookup keys are never void
+
+Traverser behavior with void values:
+- sum, all, any, count, cat → never void
+- first, last → void if all matches are void
+- avg, min, max → void if all matches are void
+
+========
+Matrices
+========
+
+Overview
+--------
+
+A matrix is a compact alternative to a table with exactly **two conditions**.
+It is simpler and more readable than a two-dimensional table, while following
+the same logical rules as tables.
+
+Use matrices when:
+- You have exactly **two conditions**
+- You want a **grid-like representation** (rows × columns)
+- Readability and compactness matter
+
+
+Conceptual model
+----------------
+
+A matrix is evaluated like this:
+
+- Condition 1 → column selector
+- Condition 2 → row selector
+- Cell at (row, column) → result
+
+Layout:
+- First row: test cases for **condition 1**
+- First column: test cases for **condition 2**
+- Inner cells: outcomes
+
+
+SYNTAX
+------
+
+General form:
+
+  matrix matrix_name [arguments] =
+      [alias local_definitions ;]
+      condition1, condition2 -> result_variable;
+      test_cases_for_condition1 ;
+      matrix_row+
+  end
+
+Key rules:
+- Exactly **two conditions**
+- Exactly **one result variable**
+- Aliases are optional
+- Arguments are allowed (matrix becomes a function)
+
+
+Matrix row syntax
+-----------------
+
+Each matrix row consists of:
+- One test case for condition 2
+- One outcome per test case of condition 1
+
+Conceptual form:
+
+  test_case_for_condition2 ;
+      outcome_1, outcome_2, ..., outcome_n ;
+
+
+Conditions
+----------
+
+- Both conditions are arbitrary expressions
+- They are evaluated before matching test cases
+- Same expression rules as tables apply
+
+
+Test cases
+----------
+
+Test cases follow the same rules as tables:
+
+Allowed forms:
+- Constant values
+- Wildcard: `-`
+- Boolean shortcuts: `y` / `n`
+- Ranges: `(a,b)`, `)a,b(`
+- Relational operators: `<`, `<=`, `>`, `>=`, `<>`
+- Combined conditions using `and` / `or`
+
+Rules:
+- Uniqueness rules from tables apply
+- No overlapping test cases allowed
+
+
+Outcomes
+--------
+
+Each cell outcome can be:
+- An expression
+- `-` (wildcard)
+
+Meaning of outcomes:
+- Expression → returned value
+- `-` → no value provided → result becomes **void** and an error is raised
+
+Explicit void values (e.g. `void_int`) may also be used.
+
+
+Evaluation logic
+----------------
+
+Evaluation steps:
+1. Evaluate both conditions
+2. Match condition 1 against column test cases
+3. Match condition 2 against row test cases
+4. Return value at the intersecting cell
+
+If:
+- No matching row/column → void + error
+- Cell contains `-` → void + error
+
+
+Uniqueness rules
+----------------
+
+Matrices follow the same uniqueness rules as tables:
+- No two test cases may overlap
+- Each input must map to **at most one** cell
+- Ambiguous matches are not allowed
+
+
+Example
+-------
+
+  matrix max_flight_duty_time_base =
+      %nr_of_landings%,
+      %duty_check_in_time% -> export %max_flight_duty_time_base%;
+
+                  0,      (1,2),  3,      4,      >=5;
+      (05:30,05:59);  00:00,  10:30,  10:00,  09:30,  08:45;
+      (06:00,06:29);  00:00,  11:00,  10:30,  10:00,  09:15;
+      (06:30,06:59);  00:00,  11:30,  11:00,  10:30,  09:45;
+      (07:00,18:29);  00:00,  12:00,  11:30,  11:00,  10:15;
+      (18:30,04:29);  00:00,  09:00,  08:30,  08:00,  07:15;
+      (04:30,04:59);  00:00,  09:30,  09:00,  08:30,  07:45;
+      (05:00,05:29);  00:00,  10:00,  09:30,  09:00,  08:15;
+  end
+
+Interpretation:
+- Columns → `%nr_of_landings%`
+- Rows → `%duty_check_in_time%`
+- Result → `%max_flight_duty_time_base%`
+
+Example evaluation:
+- `%nr_of_landings% = 3`
+- `%duty_check_in_time% = 06:15`
+→ Result = **10:30**
+
+
+When to use a matrix vs a table
+-------------------------------
+
+Use a **matrix** when:
+- Exactly two conditions
+- Data naturally forms a grid
+- Readability is important
+
+Use a **table** when:
+- More than two conditions
+- Need clusters or defaults
+- Need external data sources
+
+====================
+Sets
+====================
+
+Sets
+----
+
+Sets provide a simple and convenient way to define categories of things. For instance, to determine whether a certain airport lies within some geographical area, the easiest solution is to define a set containing all the airports within that area.
+
+Sets can be internal or external and the second part of the syntax determines which type of set it is. Internal sets contain a list of constants, whereas external sets contains a reference to the external data source.
+
+
+Syntax
+------
+
+set_def ::=
+  gexport set set_ident = setcont ;
+
+set_ident ::=
+  ident
+
+setcont ::=
+  [parameter] set_body [remark]
+| external data_type setextfname . fieldname [remark]
+
+
+This section describes the following topics:
+- Internal sets
+- External sets
+- Using sets
+
+
+Internal sets
+-------------
+
+set_body ::=
+  set_body , sign_const
+| sign_const
+
+All members of a set are constants and must have the same data type.
+
+Example:
+  set asian_airports = "BKK","SIN","HKG","PEK","NRT";
+
+The contents of parameterized internal sets can be updated from the run-time system. An element may be removed or added without having to recompile and reload the rule set.
+
+Note:
+  Internal sets must have at least one member in the source code. If the set is a parameter then the user can make the set empty.
+
+
+External sets
+-------------
+
+Repeat the syntax for the setcont of an external table.
+
+setcont ::=
+  external data_type setextfname . fieldname [remark]
+
+setextfname ::=
+  ( expr )
+| qual_var_ident [pexprs]
+| keyword [pexprs]
+| string
+
+External sets get their members from external storage, for example a file. The layout of the external storage is exactly the same as the layout of external tables. The field name is the name of the field that will be used to collect the members of the set. If the external file contains more than one field, only the field specified in the external set definition is used. The other fields are ignored. The file may contain duplicates. Several tables and rule sets may simultaneously refer to the same external file and just use different combinations of the fields.
+
+Example (two external set definitions):
+  set african_airports  =
+    external string "aairport"."ap";
+
+  set american_airports =
+    external string %tabname%."ap";
+
+In this example the field ap in the external file aairport is used to define the members of the set african_airports; and the field ap in the file as given in the variable %tabname%, defines the members of the set american_airports.
+
+
+Using sets
+----------
+
+A set is used through the in operator. For example, the expression
+
+  %arrival_airport_name% in african_airports
+
+checks if a flight arrives at an airport in Africa, provided that the set african_airports has been properly defined.
+
+===========
+FILTERS
+===========
+
+You can use filters to gain more control over data that the rules act upon.
+Filters make it possible to access special categories of data with a traverser, for example data concerning non-flying activities such as free days.
+
+Filters can be regarded as a convenient syntax for the where construct of traversers.
+
+Defining and Using Filters
+
+Filters provide a convenient way to filter objects on a specific traverser level, making only the currently applicable objects visible to traversers.
+
+For example, when defining variables and rules concerning free days, objects related to flying activities are of no interest. Writing definitions becomes easier if these objects are not visible to the rules.
+
+Filter Syntax
+
+The syntax of a filter is:
+
+filter_def ::= gexport filter filter_ident = qual_level_ident ( expr ) ;
+
+filter_ident ::= ident
+
+
+filter_ident is the name of the filter.
+
+The filter can be used in traversers instead of ordinary levels.
+
+The expression must be a boolean expression.
+
+Example 1
+filter my_filter = leg( not deadhead );
+
+
+The filter my_filter may replace the level leg in expressions where only non-passive flights are relevant.
+
+A traverser using my_filter will:
+
+Never include leg objects where deadhead is true
+
+Ignore deadhead legs when retrieving next, previous, first, or last leg objects
+
+Example 2
+filter f_days =
+  duty( first(leg(duty), activity_type) = "F" );
+
+filter r_days =
+  duty( first(leg(duty), activity_type) = "LEG" );
+
+%number_of_free_days% =
+  count(f_days(trip));
+
+%flying_time% =
+  sum(r_days(trip),
+      sum(leg(duty), arrival - departure));
+
+
+Assuming:
+
+activity_type returns "F" for free days
+
+activity_type returns "LEG" for production days
+
+Then:
+
+f_days filters everything except free days
+
+r_days filters everything except real (flying) duties
+
+As a result:
+
+%number_of_free_days% returns the number of free days in the current trip
+
+%flying_time% returns total flying time, excluding free days
+
+Example 3 – Filters with Traversers
+filter active_leg =
+  leg( not deadhead );
+
+%start1% =
+  first(active_leg(duty), departure);
+
+%rest1% =
+  next(active_leg(duty), departure) - arrival;
+
+
+The filter active_leg removes deadhead activities.
+
+Therefore:
+
+%start1% returns the departure time of the first non-deadhead activity
+
+%rest1% returns the time between arrival of the current activity and departure of the next non-deadhead activity
+
+Important Notes
+
+Filter conditions must have the same dependency level as the filter itself.
+
+The following example is incorrect because the filter is defined on the duty level, but the condition depends on leg:
+
+/* Incorrect filter definition */
+filter foo = duty( activity_type = "LEG" );
+
+
+A filter may not reference itself.
+
+The following example is also invalid:
+
+/* Another incorrect filter definition */
+filter bar = leg( next(bar(duty), deadhead) );
+
+=========
+LEVELS
+=========
+
+The level construction is used to define which objects are available in the rules and how these objects are related to each other.
+
+This section describes the following topics:
+
+Syntax
+
+Atomic level
+
+Full chain level
+
+General level
+
+Constraints when defining levels
+
+Writing levels with good performance
+
+Parallel level hierarchies
+
+Level aliases
+
+There is always:
+
+one atomic level, and
+
+one level describing the full chain.
+
+Between these levels, an arbitrary number of levels can be introduced.
+
+Each level (except atomic and full chain) is defined in terms of an already defined level.
+
+The first level (for example duty) is defined in terms of the atomic level.
+
+The second level (for example trip) is defined in terms of the previous level, and so on.
+
+It is also possible to define parallel levels, for example several levels defined in terms of the leg level.
+
+In addition to defining new levels, it is possible to create alias names for existing levels.
+
+Syntax
+
+The syntax of a level is:
+
+level_def ::=
+  gexport level level_ident =
+    level_body
+    [remark ;]
+  end
+|
+  gexport level level_ident = qual_ident ;
+
+level_ident ::= ident
+
+level_body ::=
+  when( bool_const );
+|
+  (is_first | is_last)(qual_ident) when ( expr );
+
+Atomic Level
+
+The definition of the atomic object is needed to name the smallest available object.
+This atomic level is used in at least one other level definition.
+
+Example:
+
+level leg =
+  when(true);
+end
+
+Full Chain Level
+
+The definition of the full chain object is needed to name the object containing the full chain.
+
+The chain level is also needed to refer to other objects when defining general levels.
+
+Example:
+
+(The full chain level is used in most level definitions.)
+
+level trip =
+  when(false);
+end
+
+General Level
+
+All level definitions (except atomic and full chain) use already defined levels.
+
+That means: a new level is based on an existing level, and the definition describes when an object of the existing level is the first or last object in the new level object.
+
+Example 1
+
+This can be read as:
+“A leg is the last leg in a duty when the connection time between two legs is greater than 8 hours.”
+
+level duty =
+  is_last(leg)
+  when(next(leg(trip), departure) - arrival >= 8:00 );
+end
+
+Example 2
+
+Equivalent to the previous one, but defines the first object instead of the last:
+
+level duty =
+  is_first(leg)
+  when(departure - prev(leg(trip), arrival) >= 8:00);
+end
+
+Constraints When Defining Levels
+
+The expression defining a specific level may not refer, directly or indirectly, to levels that are defined using the particular level itself.
+
+Example (NOT valid):
+
+level duty =
+  is_last(leg)
+  when(is_last(leg(duty));
+end
+
+
+This level definition is not valid because the expression defining the level uses the level itself.
+
+Also:
+
+It is not allowed to use iterators in level definitions.
+
+Writing Levels With Good Performance
+
+Complicated levels can cause bad system performance.
+
+General tips:
+
+Use simple level expressions
+
+Stick to the most important levels:
+
+For crew pairing: leg, duty, trip
+
+For crew rostering: add wop, roster, and maybe month
+
+Parallel Level Hierarchies
+
+Levels are defined in a hierarchy.
+
+The atomic level is the base.
+
+Other levels are based on the atomic level or other levels in the hierarchy.
+
+You can define many levels based on the same existing level.
+
+Example:
+
+level duty =
+  is_last(leg)
+  when(%new_working_day%);
+end
+
+level month =
+  is_last(leg)
+  when(%new_month%);
+end
+
+
+The levels duty and month are both based on the leg level.
+
+Level Aliases
+
+A level alias can be used to refer to the same level using different names.
+
+Example:
+
+level roster = chain;
+
+=============
+ITERATORS
+=============
+
+Sometimes it is not enough to calculate values for objects in one chain. The iterator construction allows calculations, for example:
+
+on all chains in the active plan,
+
+on all rotations,
+
+on all selected crew members.
+
+Iterators must be defined by a Rave programmer.
+
+An iterator partitions the active set of objects. It starts with a data set (for example, all trips in the active plan or the result from another iterator) and divides it into subsets.
+
+Even though iterators are defined by a Rave programmer, there are also some special built-in iterators. See: Built-in iterators.
+
+This section describes:
+
+Defining an iterator
+
+Using the iterator
+
+Mixing iterators and levels in traversers
+
+Iterator aliases
+
+Defining an Iterator
+
+An iterator definition always operates on sets, where the members are defined as, or constructed from, level objects.
+
+In addition to defining new iterators, it is possible to create alias names for existing iterators.
+
+Syntax
+iter_def ::=
+  gexport iterator iter_ident =
+    partition(qual_ident) [bykeys]
+    [remark_semi]
+  end
+|
+  gexport iterator iter_ident =
+    qual_iterator_ident ;
+
+iter_ident ::= ident
+
+
+If the optional bykeys part is omitted, each set has exactly one member.
+
+Example 1 (no keys → one object per set)
+iterator leg_set =
+  partition(leg);
+end
+
+iterator chain_set =
+  partition(chain);
+end
+
+Grouping with by(...) (bykeys)
+
+bykeys can be used to collect objects for which all keys are identical in the same set.
+
+Syntax
+bykeys ::= by( keys )
+
+keys ::= key
+      | key , keys
+
+key ::= expr
+
+Example 2 (group by one key)
+
+This example creates:
+
+sets of all legs arriving at the same airport
+
+sets of all legs with the same flight number
+
+iterator arrival_airports =
+  partition(leg)
+    by(arrival_airport_name);
+end
+
+iterator flight_number_set =
+  partition(leg)
+    by(flight_number);
+end
+
+Example 3 (group by multiple keys)
+
+Multiple keys can be used to collect, for example, all legs with the same:
+
+departure airport,
+
+flight number,
+
+deadhead status.
+
+iterator flight =
+  partition(leg)
+  by(departure_airport_name,
+     flight_number, deadhead);
+end
+
+Matching sequences using map(...)
+
+By comparing attributes not only for one object, but for a sequence of objects, it is possible to define attribute matches for many objects. This is done with the map construction.
+
+Syntax
+key ::= map( travkey , keys )
+
+Example 4 (group chains by structure + per-leg attributes)
+iterator compressed_chain =
+  partition(chain)
+  by(map(leg(chain),
+         departure_airport_name,
+         flight_number, deadhead);
+end
+
+
+This iterator puts all chains that have the same structure, and for which each leg has the same values for the listed attributes, into the same group.
+
+Meaning:
+
+If the first two chains have identical attributes → same subset
+
+If the last chain differs (e.g., departure airport differs) → separate subset
+
+NOTE
+If one of the keys in an iterator definition evaluates to void, the object is skipped (it is not considered in the partition).
+
+Using the Iterator
+
+Iterators may be used:
+
+in traversers
+
+in report language loops
+
+Because objects divided by iterators do not necessarily have a well-defined order, the while construction should not be used together with iterators.
+
+When iterators are used in a traverser, the traverser is applied to each group created by the iterator.
+
+Example 1
+count(compressed_chain)
+
+
+Counts the number of unique chains.
+
+Example 2
+max(compressed_chain, count(leg_set))
+
+
+For each subset created by compressed_chain, every leg in every chain is counted.
+The result is the maximum number of legs in a compressed chain.
+
+Example 3 (well-defined)
+max(flight_number_set, flight_number)
+
+
+This gives the maximal flight number.
+
+Why it works:
+
+flight_number may be taken from any leg in the active group
+
+but all legs in a flight_number_set group are guaranteed to share the same flight number
+
+Example 4 (BAD)
+max(arrival_airports, flight_number)  /* BAD */
+
+
+Here, flight_number is collected from an arbitrary leg inside each arrival airport group.
+
+NOTE
+In the last example only the arrival_airport attribute is guaranteed to be identical for all legs in the group. It is the programmer’s responsibility to only use expressions that are well-defined together with an iterator.
+
+Mixing Iterators and Levels in Traversers
+
+It is vital that an expression used inside an iterator traverser makes sense.
+
+A common mistake is mixing:
+
+traversers using iterators, and
+
+traversers using levels,
+in a way that makes the calculation arbitrary.
+
+Example 1 (BAD)
+
+Goal: find the maximum number of legs arriving to an airport.
+
+max(arrival_airports, count(leg(chain))  /* BAD */
+
+
+What goes wrong:
+
+For each arrival airport group, count is applied
+
+but count(leg(chain)) uses a level traverser (not an iterator)
+
+so it is applied on an arbitrary chain
+
+if the group contains legs from 5 chains, only 1 chain may be counted
+
+and it counts all legs in that chain, not only those arriving at the active airport
+
+Correct version:
+
+max(arrival_airports, count(leg_set))
+
+
+Now, each leg arriving at the specific airport is counted.
+
+Example 2 (Level traverser can be OK inside an iterator)
+sum(chain_set, sum(leg(chain), departure-arrival))
+
+
+This calculates the total block time for all chains.
+
+Why it is acceptable:
+
+sum(leg(chain), ...) will always be applied on only one chain
+
+because it is inside the built-in chain_set iterator
+
+So using a standard level traverser is fine here.
+
+Iterator Aliases
+
+An iterator alias can be used to refer to the same iterator using different names.
+
+Example:
+
+iterator roster_set = chain_set;
+
+===========
+CONTEXTS
+===========
+
+The iterator construction is used to divide data into subsets. The result may be some chains, some legs, or some rotations.
+
+The context construction is used to refer to the original data, for example:
+
+all chains in the window
+
+all rotations
+
+Contexts are defined in a similar way as keywords. Therefore, the configuration is application-dependent.
+
+This section describes:
+
+Using a context
+
+Default context
+
+Current context
+
+Using a Context
+Syntax
+prim_expr ::= context( context , expr )
+
+
+Where context can be:
+
+context ::= ident
+         | default_context
+         | current_context
+
+
+All contexts available with the context(...) construction are also available as report language loops.
+
+Example 1
+context(sp_crrs, count(chain_set))
+
+
+Iterators used inside the context construction are applied on all objects associated with that context.
+
+In this example, the expression counts all chains in the sub-plan.
+
+IMPORTANT
+Just like with iterators, the objects in a context are represented by one randomly chosen object. Therefore, expressions that do not aggregate over all objects in the context have no well-defined meaning.
+
+Example 2 (not well-defined)
+context(sp_crrs, flight_number)
+
+
+In this expression, the flight number will be collected from any leg in the sub-plan.
+
+Default Context
+
+The default context is a special construction that is used if no context is explicitly stated.
+
+Example 1
+count(chain_set)
+
+
+If an expression is not used inside a context(...) construction, the default context is used.
+
+Example 2 (explicit default context)
+context(default_context, count(chain_set))
+
+
+If used from the top level, this is identical to the previous example; the only difference is that the default context is explicitly stated.
+
+If used inside another iterator expression, the expression will always return all chains in the default context (for example, all chains in the window).
+
+Current Context
+
+The current context is a special construction used to refer to all chains in the context that originally was used.
+
+It is similar to the default context, but the result may vary depending on where it is used.
+
+Example 1
+context(default_context,
+    sum(chain_set,
+          context(current_context, ...
+
+
+Here, current_context returns all objects in the default context.
+
+Example 2
+context(sp_crrs,
+    sum(chain_set,
+       context(current_context, ...
+
+
+Here, current_context returns all objects in the sp_crrs context.
+
+The current context may be used to write definitions that are usable regardless of what context they are used in.
+
+Example 3 (percentage using current context)
+%all_chains% =
+  context(current_context, count(chain_set));
+
+(100 * count(chain_set) where(%something%)) / %all_chains%
+
+
+This calculates the percentage of chains that fulfill %something%.
+
+%all_chains% calculates the total number of chains in the active context.
+
+=========
+GROUPS
+=========
+
+Rave groups make it possible to organize parameters and other definitions in a rule set into groups or classes.
+
+During run time, groups can be used to:
+
+present chosen subsets of parameters, or
+
+validate subsets of rules.
+
+The definitions that can be grouped are:
+
+rules
+
+internal sets
+
+parameters
+
+constraints
+
+Group Definition Syntax
+group_def ::=
+  group group_ident = [groupmems] [remark] ;
+|
+  group group_ident [remark] ;
+
+group_ident ::= ident
+
+groupmems ::=
+  groupmems , groupmem
+| groupmem
+
+groupmem ::= qual_ident
+
+
+Meaning:
+
+group_ident is the name of the group.
+
+groupmems are names of definitions (group members).
+
+Rules:
+
+Group members must be unique within a group.
+
+Duplicates are silently deleted.
+
+A definition can belong to more than one group.
+
+Definitions can be added to or removed from a group during run time.
+
+Example 1
+%parA%   = parameter 1;
+%parB%   = parameter 2;
+%parXYZ% = parameter 3;
+
+group grpA = %parA%, %parXYZ%;
+group grpB = %parB%, %parXYZ%;
+
+
+Explanation:
+
+This example shows three parameters organized into two groups.
+
+When the rule set is loaded:
+
+%parA% belongs to group grpA
+
+%parB% belongs to group grpB
+
+%parXYZ% belongs to both grpA and grpB
+
+Additive Group Definitions
+
+Group definitions are additive.
+
+If you define the same group in several places, the resulting group contains all group members from the different definitions.
+
+Example 2
+group test = rule1;
+group test = rule2;
+
+
+In this example, the group test contains both rule1 and rule2.
+
+Note on Redefinition / Placeholders
+
+If you redefine a group, you can use a place holder to keep the group members in the parent group. See: Multiple implementations.
+
+================
+ACCUMULATORS
+================
+
+Accumulators enable a Rave programmer to approximately model rules spanning over longer time periods (historical and future) than the currently loaded plan.
+
+Typical use cases:
+
+Crew member properties (e.g., duty time)
+
+Events (e.g., medical checks)
+
+Accumulators can be defined for:
+
+Sums of Int
+
+Sums of Reltime
+
+Abstime points (time events)
+
+This section covers:
+
+Syntax
+
+Attributes
+
+Accumulator result
+
+Dependency
+
+Storage
+
+Update program
+
+Reltime accumulator example
+
+Abstime accumulator example
+
+Abstime accumulator using acc_filter
+
+SYNTAX
+
+Accumulator definition syntax:
+
+accumulator ::=
+  gexport accumulator acc_ident(formal_args) =
+     expression ;
+     [iterator = iter_ident;]
+     (attribute)*
+  end
+
+
+Identifiers:
+
+acc_ident ::= ident
+
+
+Attribute forms:
+
+attribute ::=
+  attr_ident [(formal_args)] = expression ;
+| external expression ;
+
+attr_ident ::= ident
+
+Required formal arguments
+
+Int and Reltime accumulators: must take an interval with two Abstime points:
+
+start, end
+
+Abstime accumulators: must take:
+
+start (Abstime)
+
+direction (Bool) → forward = true, backward = false
+
+Referring to an accumulator value
+
+You call an accumulator like a function:
+
+expr ::= acc_ident(expr, expr)
+
+Expression
+
+In an accumulator definition, the main expression specifies how the accumulator value is computed on data in the loaded plan (assume data is available).
+
+Int / Reltime accumulator expression
+
+Should compute the contribution from the loaded plan within the interval specified by the formal args.
+
+The interval is automatically adjusted using:
+
+plan_start
+
+plan_end
+
+stored time points in tables
+
+If the resulting interval is empty (start >= end), contribution must be zero (0 or 0:00).
+
+A sub-interval must not produce a larger contribution than the original interval.
+
+Abstime accumulator expression
+
+Should return a time point t based on start and direction:
+
+forward (direction=true): smallest t such that:
+
+start <= t < plan_end
+
+backward (direction=false): largest t such that:
+
+plan_start <= t <= start
+
+If no such t exists: return void(Abstime)
+
+The expression should not result in a time point outside the loaded plan.
+
+ATTRIBUTES
+
+Available attributes:
+
+Attribute name	Datatype	Dependency
+key	any datatype	chain or same as iterator, if any
+plan_start	Abstime	>= key
+plan_end	Abstime	>= key
+proj_interval_func	Int or Reltime	>= key
+acc_start	Abstime	const
+acc_end	Abstime	const
+acc_next(Abstime)	Abstime	const
+acc_filter	Abstime	const
+acc_force_store(Abstime)	Abstime	const
+external	String	const
+
+Rules:
+
+Attributes can be specified in any order.
+
+Only one of each attribute is allowed.
+
+key
+
+Identifies saved accumulated rows.
+
+Optional if an iterator is specified:
+
+then the iterator partition key is used if no key is given.
+
+Key expression can be any type.
+
+If not String, values are converted to strings before writing to the accumulator table.
+
+plan_start, plan_end
+
+Defines the start and end of the loaded plan and splits the input interval into:
+
+Left of plan_start: saved data before the plan
+
+Between plan_start and plan_end: the plan itself
+
+Right of plan_end: saved data after the plan
+
+Accumulator looks up stored values before/after the plan in a table, and computes the plan portion using the accumulator expression.
+
+NOTE:
+
+plan_start and plan_end must be used together.
+
+If neither is defined, the accumulator behaves like a plain function (no table lookup).
+
+proj_interval_func
+
+Optional function; meaning depends on accumulator type.
+
+Int / Reltime: predicts future contribution in the final interval between the last used data point and the end argument time point. The formal args are automatically adjusted to that final interval.
+
+Abstime: should return a time point at/after start if forward, or at/before start if backward, or void(Abstime). Only called if no time points are found from plan or table.
+
+acc_start, acc_end, acc_next
+
+Define the interval and resolution for storing samples from the loaded plan into the table.
+
+acc_start: starting point of accumulation
+
+For Int/Reltime, it is filtered through acc_next(acc_start - 0:01) to leverage rounding in acc_next.
+
+acc_end: end point of accumulation (end itself not included)
+
+acc_next(Abstime t): for Int and Reltime only; given previous time point, returns next sample time.
+
+Example daily sampling: t + 24:00
+
+Do NOT define acc_next for Abstime accumulators.
+
+acc_filter
+
+For Abstime accumulators.
+
+Populates the filt column in accumulator_time table with a value used for filtering.
+
+acc_force_store
+
+For Int/Reltime accumulators.
+
+Forces storage of specific time points (e.g., Jan 1 each year).
+
+external
+
+Specifies an external table to store/read accumulated values.
+
+Same table may be used by multiple accumulators of the same type.
+
+Different accumulator main expression datatypes must use different tables.
+
+The specified table must exist and contain columns:
+
+Required columns:
+
+name : String
+
+acckey : String
+
+tim : Abstime
+
+val : Int or Reltime (omit this for Abstime accumulators)
+
+If external is not specified, default system tables are used (see Storage).
+
+NOTES:
+
+Accumulators with same name across rule sets in a super rule set must have the same external value.
+
+If some specify external and some don’t, the external must be one of:
+
+accumulator_int
+
+accumulator_rel
+
+accumulator_time
+
+ACCUMULATOR RESULT
+
+Result calculation depends on type.
+
+Int and Reltime
+
+For accumulator acc called with interval [b, e) as acc(b, e), determine time points:
+
+t0 = min(t) where t >= b and t is a stored value
+
+t1 = max(t) where t <= acc.plan_start and t is a stored value
+
+t2 = min(t) where t >= acc.plan_end and t is a stored value
+
+t3 = max(t) where t <= e and t is a stored value
+
+t4 = e
+
+If t0..t3 are stored, the result is:
+
+tab[t1] - tab[t0]
+acc.expr(t1, t2)
+tab[t3] - tab[t2]
+acc.proj_interval_func(t3, t4)
+
+
+Where:
+
+tab[t] = value stored in acc.external[acc.name, acc.key, t]
+
+acc.expr(t1, t2) = accumulator expression evaluated with args t1, t2
+
+acc.proj_interval_func(t3, t4) = projection function (if defined) with args t3, t4
+
+Fallback rules:
+
+If b >= plan_start OR no t0/t1 stored:
+
+set t1 = b, first term contributes 0
+
+If e <= plan_end OR no t2/t3 stored:
+
+set t2 = t3 = plan_end, third term contributes 0
+
+Abstime
+
+For acc(start, direction):
+
+direction = TRUE (forward)
+
+If plan_end <= start:
+
+lookup in table → smallest t with start <= t
+
+if none → void(Abstime)
+
+If plan_start <= start < plan_end:
+
+evaluate accumulator expression
+
+if void → do table lookup like (1) but using plan_end as start
+
+note: expression result not automatically restricted to plan interval
+
+If start < plan_start:
+
+lookup → smallest t with start <= t < plan_start
+
+if none → use expression as in (2) but with plan_start as start
+
+direction = FALSE (backward)
+
+If start < plan_start:
+
+lookup → largest t with t <= start
+
+if none → void(Abstime)
+
+If plan_start <= start < plan_end:
+
+evaluate expression
+
+if void → lookup like (1) but using plan_start as start
+
+note: expression result not automatically restricted to plan interval
+
+If plan_end <= start:
+
+lookup → largest t with plan_end <= t <= start
+
+if none → use expression as in (2) but with plan_end as start
+
+DEPENDENCY
+
+Accumulator dependency = greatest common dependency of:
+
+main expression dependency
+
+iterator dependency (if any)
+
+all attribute dependencies
+
+Rules:
+
+If both key and an iterator are used, they must have the same dependency.
+
+If no iterator: dependency must be chain or constant.
+
+If key exists: its dependency must be dominated by accumulator dependency.
+
+acc_start, acc_end, acc_next dependencies must all be constant.
+
+STORAGE
+
+Accumulator values are stored in external tables.
+
+Default tables (one per datatype):
+
+Etable name	Datatype
+accumulator_int	Int
+accumulator_rel	Reltime
+accumulator_time	Abstime
+
+Each external table has columns:
+
+Column name	Datatype	Comment
+name	String	Accumulator name
+acckey	String	Partition key or object identifier
+tim	Abstime	End of period (Int/Reltime) or time event (Abstime)
+val	Int or Reltime	Only for Int/Reltime accumulators
+filt	Abstime	Used only with acc_filter (Abstime)
+
+Notes:
+
+Tables must already exist. Rave does not create them.
+
+You can use another table via external.
+
+Int and Reltime table semantics
+
+Each val is “how much is accumulated up to, but not including, tim” for a specific (name, acckey).
+
+Example explanation (daily midnight sampling):
+
+Legs:
+
+Dec 12 21:55 – Dec 13 00:01
+
+Dec 13 10:00 – Dec 13 14:00
+
+Dec 13 23:58 – Dec 14 01:30
+
+New sample for Dec 14 increases by:
+
+0:01 + 4:00 + 0:02 = 4:03
+
+If sample at Dec 13 is 100:00:
+
+sample at Dec 14 becomes 104:03
+
+To get accumulation for all of Dec 13:
+
+table[Dec 14].val - table[Dec 13].val = 104:03 - 100:00 = 4:03
+
+For correctness, mapping tim -> val must be monotonic (only increase or only decrease).
+
+If two consecutive intervals contribute 0, you get three samples with same values; the middle one is omitted. Differences still work, but sample time points chosen may affect expression/projection evaluation.
+
+Abstime table semantics
+
+No val column.
+
+It stores time events; the time points themselves are the accumulator results.
+
+UPDATE PROGRAM
+
+Accumulators are intended to be updated periodically or manually by an application update program.
+
+RELTIME ACCUMULATOR EXAMPLE
+
+Goal: accumulated block time for a crew member between two time points s and e (with s < e).
+
+Note: acc_end extends by one minute because acc_end is not included in the interval.
+
+Example 1:
+
+accumulator block_acc(Abstime s, Abstime e) =
+   sum(leg(roster), %block_time%)
+       where (arrival > s and arrival <= e);
+   key = crr_crew_id;
+   plan_start = pp.%start%;
+   plan_end = pp.%end%;
+   proj_interval_func = (e-s)/5;
+   acc_start = round_down(pp.%start%, 24:00);
+   acc_end = pp.%end% + 0:01;
+   acc_next(Abstime t) = t+24:00;
+end
+
+
+Example 2 (use in a rule):
+
+rule max_block_in_28days =
+   valid %is_on_duty%;
+   block_acc(leg.%start_day% - 28*24:00,
+             leg.%start_day%) <= 120:00;
+   remark "Maximum 120 block hours in 28 days";
+end
+
+ABSTIME ACCUMULATOR EXAMPLE
+
+Tracks extended deadhead trips.
+
+Example 1:
+
+accumulator acc_last_ext_dh(Abstime starttime, Bool forward) =
+    if forward then
+        first(trip(chain), trip.%end_hb%)
+        where (trip.%start_hb% >= starttime
+               and trip.%is_ext_deadhead%)
+    else
+        last(trip(chain), trip.%end_hb%)
+        where(trip.%start_hb% <= starttime
+              and trip.%is_ext_deadhead%);
+    key = crr_crew_id;
+    acc_start = %pp_start%;
+    acc_end = %pp_end% + 0:01;
+end
+
+
+Example 2 (rule: at least 3 months between extended deadheads):
+
+rule 3_months_btw_extended_dh =
+    valid roster.%check_rules%
+        and trip.%is_ext_deadhead%;
+    trip.%start_hb% >= add_months(
+        acc_last_ext_dh(trip.%start_hb%, false), 3);
+    remark "At least three months between extended deadheads";
+end
+
+ABSTIME ACCUMULATOR USING acc_filter
+
+Populates filt column in accumulator_time with the next deadhead arrival time.
+
+Example:
+
+accumulator last_dh(abstime starttime, bool forward) =
+    if forward then
+        first(leg(chain), arrival)
+        where(arrival > starttime and deadhead)
+    else
+        last(leg(chain), arrival)
+        where(arrival < starttime and deadhead);
+    key = crr_crew_id;
+    acc_start = %pp_start% + (if forward then 0:00 else 0:01);
+    acc_end = %pp_end% + 0:01;
+    acc_filter = first(leg(chain), next(leg(chain), arrival))
+                 where(arrival > starttime and deadhead);
+end
+
+=========================
+CIRCULAR DEFINITIONS
+=========================
+
+Recursive definitions are not supported in the language, and it is not possible to create circular definitions of any kind.
+
+The compiler analyzes the rule set and will generate an error if it finds a circular definition.
+
+Example (Illegal circular definition)
+%X% =
+  if is_first(leg(chain))
+       then 0:00
+      else %Y%;
+
+%Y% = %X% + arrival - departure;
+
+
+Explanation:
+
+%X% depends on %Y% (when it’s not the first leg).
+
+%Y% depends on %X%.
+
+That creates a dependency loop (%X% -> %Y% -> %X%), so the compiler rejects it.
+
+
+Modules
+Rave obtains its information from a set of input files written in accordance with this reference. Several such files are compiled to a single rule set, and each file contains a sequence of definitions. A definition can define a variable, function, table, rule set, etc., see Definitions.
+To give the rule set a structure, definitions are grouped into modules where each module can have its own specific task. The module system also makes it easier to share definitions between different rule sets.
+
+===============
+BASIC MODULE
+===============
+
+A Rave file (module file) is structured as:
+
+Optional module header (module name + optional type)
+
+Zero or more imports
+
+Zero or more definitions (rules, variables, sets, tables, etc.)
+
+Top-level grammar
+toplevel ::= [fileheader] import* def*
+
+File header
+fileheader ::= module module_ident [module_type]
+module_ident ::= ident
+
+Import
+import ::= import module_ident ;
+
+Definitions allowed in a module
+def ::=
+    level_def
+  | var_def
+  | rule_def
+  | constraint_def
+  | table_def
+  | matrix_def
+  | set_def
+  | enum_def
+  | iter_def
+  | group_def
+  | filter_def
+  | require
+  | use
+  | assertion
+
+Local vs exported definitions
+
+A definition inside a module is local by default and cannot be seen from other modules unless it is exported.
+
+All definitions in Rave are preceded by the non-terminal gexport:
+
+gexport ::= [redefine] [[global] export]
+
+
+Meaning:
+
+export: makes the identifier visible outside the module, but must be referenced with a module prefix (module.definition) unless global export is used.
+
+global export: makes the module prefix optional (still typically requires importing the module).
+
+redefine: used for multiple implementations (explained elsewhere).
+
+Qualified name syntax
+
+When something is exported with only export, you typically access it as a qualified identifier:
+
+[module .] <identifier>
+
+
+Examples of qualified forms used in the grammar:
+
+qual_enum_value ::= [ module . ] enum_value
+qual_enum_ident ::= [ module . ] enum_ident
+qual_var_ident  ::= [ module . ] var_ident
+qual_rule_ident ::= [ module . ] rule_ident
+qual_iter_ident ::= [ module . ] iter_ident
+qual_level_ident ::= [ module . ] level_ident
+qual_matrix_ident ::= [ module . ] matrix_ident
+qual_set_ident  ::= [ module . ] set_ident
+qual_ident      ::= [ module . ] ident
+
+The module name in qualifications
+
+module is either:
+
+a module identifier, or
+
+the predefined name _topmodule
+
+module ::= module_ident | _topmodule
+
+
+Notes:
+
+_topmodule is used for modules without names.
+
+Variables not defined inside a named module belong to _topmodule.
+
+Module interface
+
+The interface of a module is:
+
+the names and types of the module’s exported definitions
+
+Only the interface is visible to other modules.
+
+Key idea:
+
+Modules let you hide implementation details, so you can change internals without affecting other modules, as long as the interface stays the same.
+
+Example: a module that defines rest times
+
+This example defines a rest module that imports duty, exports %length%, and uses local parameters.
+
+module rest
+  import duty;
+
+  export %length% =
+    if(duty.%length% > 8:00) then %long_rest%
+    else %short_rest%;
+
+  %long_rest% = parameter 10:00;
+  %short_rest% = parameter 8:00;
+  ....
+
+
+Key points:
+
+Module code should be placed in a file with the same name as the module, using lowercase letters.
+
+Import statements must be placed directly after the module header.
+
+Referencing other module definitions uses module.definition, e.g. duty.%length%.
+
+It’s possible for two modules to each have a %length% definition; the module prefix disambiguates.
+
+Only exported definitions are visible outside; locals like %long_rest% and %short_rest% are only visible inside rest.
+
+Exporting variables defined by a table
+
+Variables produced by a table can be exported in the same way:
+
+table a_name =
+  cond1, cond2 -> export Int %a_variable%;
+  ...
+
+Global export
+
+Common definitions can be global exported so you don’t need the module prefix in expressions.
+
+Example: exporting levels globally
+
+module levels
+  global export level leg = ...
+  global export level duty = ...
+  ....
+
+
+Then a duty module can use the level names directly:
+
+module duty
+  import levels;
+
+  export %length% = %end% - %start%;
+  %start% = first(leg(duty), departure);
+  %end%   = last (leg(duty), arrival);
+  ....
+
+
+Notes:
+
+leg and duty can be used without levels. prefix because they were globally exported.
+
+The levels module still must be imported.
+
+===============================
+MULTIPLE IMPLEMENTATIONS
+===============================
+
+Sometimes the same module must be implemented in multiple ways (e.g., short-haul vs long-haul). Rave supports multiple implementations of the same module.
+
+Key ideas:
+
+One implementation is marked as the root module.
+
+Other implementations can:
+
+reimplement everything from scratch, or
+
+inherit definitions from another implementation and redefine only what changes
+
+Inheritance can be chained through multiple levels.
+
+Important note about imports:
+
+An import statement is always followed by a root module name.
+
+Which implementation is actually used is determined when building the rule set.
+
+This page covers:
+
+Inheritance
+
+Partial redefinition
+
+Pure interface modules
+
+Inheritance
+
+A child module inherits all definitions from its parent module.
+
+You can redefine inherited definitions that must change.
+
+You can add new definitions.
+
+Root module header syntax
+
+Parent (root) modules use a special header:
+
+fileheader ::= root module module_ident
+
+
+Example: make rest the root module
+
+root module rest
+...
+
+Child module header (inherits)
+
+A child uses inherits <parent>:
+
+module rest_sh inherits rest
+  redefine %long_rest% = parameter 9:00;
+  ....
+
+
+That inherits ... part is the module_type:
+
+module_type ::= inherits module_ident
+
+Why “redefine” is required
+
+Redefined definitions must be marked with the word redefine:
+
+prevents accidental overriding
+
+clearly distinguishes “new definition” vs “overriding inherited definition”
+
+Effect:
+
+If %length% in rest depends on %long_rest%,
+then rest_sh inherits %length% but it will be computed using the redefined %long_rest% = 9:00.
+
+redefine + export status
+
+redefine can be combined with export keywords.
+You may keep the same visibility or make it more visible.
+
+Example (redefining and exporting):
+
+redefine export %long_rest% = 9:00;
+
+
+Partial redefinition
+
+You can redefine only part of a definition in a child module.
+If you don’t redefine everything, the missing parts are inherited from the root module.
+
+Examples of what can be partially inherited:
+
+a parameter’s value vs its comment
+
+a rule’s body vs its metadata
+
+group members
+
+To explicitly inherit “the rest”, use the placeholder:
+
+_
+
+
+Placeholders used for:
+
+parameters (inherit value)
+
+variables (inherit body)
+
+rules (inherit body)
+
+groups (inherit members)
+
+Grammar fragments:
+
+par_const ::= _
+var_body  ::= _
+rule_body ::= _
+groupmem  ::= _
+
+Partial redefinition example
+
+Root module:
+
+root module a_module
+  %a% = parameter 5 remark "a comment";
+  %b% = parameter 10 maxvalue 10;
+  %x% = parameter 1;
+  %y% = parameter 2;
+  group grpZ = %x%,%y%;
+
+
+Child module:
+
+module a_child_module inherits a_module
+  redefine %a% = parameter _ remark "another comment";
+  redefine %b% = parameter 20; /* compilation error */
+  %z% = parameter 3;
+  redefine group grpZ = _, %z%;
+
+
+What happens:
+
+%a%: keeps value 5 (because _ inherits the value) but changes the comment to "another comment".
+
+%b%: compilation error because new value 20 violates the inherited maxvalue 10.
+
+grpZ: becomes %x%, %y% (inherited via _) plus %z%.
+
+Additional note:
+
+Comments for variables, tables, sets, and rules are also inherited.
+
+For rules: if parts like delta, max_penalty, min_penalty, or the expression body are not redefined, they are partially inherited.
+
+If you want to avoid partial inheritance, you may need to explicitly redefine a value back to its default.
+
+Pure interface modules
+
+A root module does not have to implement everything.
+If a variable/level/iterator/etc. is left unimplemented in the root module, then child modules are forced to implement it.
+
+Definitions that can be left unimplemented include:
+
+variables
+
+levels
+
+iterators
+
+rules
+
+constraints
+
+Grammar examples for “interface-only” style:
+
+Unimplemented level:
+
+level_def ::= gexport level ident ;
+
+
+Iterators:
+
+iter_def ::=
+    gexport iterator ident ;
+  | gexport iterator ident =
+        [remark_semi]
+    end
+
+
+Unimplemented variable body is represented by datatype only:
+
+var_body ::= data_type
+
+
+Unimplemented rule:
+
+rule_def ::= gexport rule [ponoff] rule_ident ;
+
+
+Unimplemented constraint:
+
+constraint_def ::= gexport constraint [ponoff] ident ;
+
+Example: pure interface for rest
+root module rest
+  export %length% = Reltime;
+
+
+Meaning:
+
+Every child module of rest must implement %length% with datatype Reltime.
+
+Why this is useful:
+
+Root module can hold common parts and shared helpers
+
+Child modules implement the specific business logic (short-haul, long-haul, etc.)
+
+Great structure for maintaining variants cleanly
+
+Example: standard module configured per rule set
+
+Root module (standard logic written using a “placeholder” level name):
+
+root module carmen_std_module
+level carmen_trip;
+<implementation of the standard module using carmen_trip>
+
+
+Child module config binds that placeholder to the real level in the rule set:
+
+module std_module_config inherits carmen_std_module
+import levels;
+redefine level carmen_trip = levels.crr;
+
+======================
+MODULE DEPENDENCIES
+======================
+
+Rule set restriction
+
+Circular import dependencies are not allowed between module implementations in a rule set.
+
+The module structure can be viewed like a tree, where the most basic definitions are found in the leaves.
+
+(There is a diagram in the original page illustrating this tree structure.)
+
+Mutual dependency workaround (not recommended)
+
+If needed, two modules can depend on each other by using pure interface modules as an intermediate mechanism.
+
+This should be used only when necessary, because it can lead to a poor / messy rule set structure.
+
+(There is a second diagram in the original page illustrating this “pure interface modules” dependency workaround.)
+
+========================
+BUILDING A RULE SET
+========================
+
+This section explains how a Rave rule set is assembled from modules and module implementations.
+
+Topics covered:
+
+Structure of a rule set
+
+Choosing modules
+
+Conditional use
+
+Backward compatibility
+
+Structure of a rule set
+
+A rule set is defined by a top module file.
+
+Key points:
+
+The name of the top module file is also the name of the rule set.
+
+The top module defines:
+
+which modules are included in the rule set
+
+which implementation of a module is used when multiple implementations exist
+
+Choosing modules
+
+The top module contains one or more use statements.
+
+A use statement specifies:
+
+which modules
+
+or more precisely, which module implementations
+are included in the rule set.
+
+Syntax
+use ::= use module_ident
+      | cond_use ;
+
+
+Conditional use syntax:
+
+cond_use ::= #if ident ( ident | NUMBER )
+              use*
+            end
+
+
+By using a module:
+
+all variables and rules defined in that module become part of the rule set
+
+Important rule:
+
+If a module has only one implementation, the use statement is optional
+as long as the module is included through an import elsewhere.
+
+Example: choosing implementations
+
+Modules:
+
+module main
+  import rest;
+  import levels;
+  ...
+
+root module rest
+...
+module rest_sh inherits rest
+...
+
+module levels
+...
+module duty
+...
+
+
+Rule set top file:
+
+use main;
+use rest_sh;
+
+
+Explanation:
+
+use rest_sh; means that rest_sh is used whenever import rest appears.
+
+It is optional (but allowed) to write:
+
+use levels;
+
+
+because:
+
+levels has only one implementation
+
+it is already imported by main
+
+Adding:
+
+use duty;
+
+
+will:
+
+include the definitions from the duty module that were not already present
+
+Conditional use
+
+Conditional use allows different module implementations to be selected depending on context.
+
+Syntax
+#if ( ident )
+  use*
+end
+
+
+Use cases:
+
+different planning phases (manual vs automatic)
+
+different crew categories (pilots vs cabin crew)
+
+different products or environments
+
+Conditional use allows:
+
+switching module implementations without changing the rule set structure
+
+Example
+#if target(attribute)
+  use implementation_l;
+  use ...;
+end
+
+
+Meaning:
+
+If the target has the specified attribute, the listed implementations are used
+
+Multiple targets may exist (planning method, process phase, etc.)
+
+Targets and attributes depend on the system
+
+Conditional use in real systems
+
+When using Rave with Jeppesen tools:
+
+Studio → target attribute gpc
+
+Crew Pairing Optimizer → target attribute apc
+
+Example:
+
+#if product(gpc)
+  use report_module;
+end
+
+
+Notes:
+
+gpc is synonymous with studio
+
+The system version is available as a numeric attribute
+
+Example using version:
+
+#if version(12)
+  use v12_specific_module;
+end
+
+
+Backward compatibility
+
+Before modules existed:
+
+rule sets lived in a single namespace
+
+files were combined using require
+
+For backward compatibility:
+
+such rule sets can still be used as a top module
+
+Important concept:
+
+Definitions in the top module belong to a special module named:
+
+_topmodule
+
+require syntax
+require ::= require string
+
+
+Key behavior:
+
+The top module may consist of multiple files
+
+All required files together form one logical module
+
+Any definition in one top-module file can be referenced from any other
+
+Migration support:
+
+The top module can import other modules
+
+Other modules can also import _topmodule
+
+Import statements in top-module files must appear at the beginning
+
+=====================
+SUPER RULE SETS
+=====================
+
+Overview
+
+By using root modules and inherited modules, you can create multiple variants of rule sets that differ only in their implementations.
+
+A super rule set allows you to:
+
+combine these variants into one large rule set
+
+load all variants simultaneously in an application
+
+dynamically choose the correct implementation during evaluation
+
+Definition of a super rule set
+
+A super rule set is treated as a special type of module.
+
+Syntax (file header)
+root rule set module_ident;
+
+Example
+
+The following example defines a super rule set named Tracking:
+
+root rule set Tracking;
+if crew.%is_cabin_crew% or trip.%is_open_cabin_trip% then
+  use Tracking_Cabin;
+else
+  use Tracking_Cockpit;
+end
+
+
+Explanation:
+
+The rule set selects Tracking_Cabin or Tracking_Cockpit
+depending on crew or trip characteristics.
+
+Both implementations are part of the same super rule set.
+
+Selection conditions
+
+Rules for conditions in a super rule set:
+
+Conditions must be chain-dependent or const-dependent
+
+Conditions may only reference definitions from the first implementation
+(in the example: Tracking_Cabin)
+
+This ensures that:
+
+an implementation is selected per chain
+
+when evaluation jumps to another chain, the conditions are re-evaluated
+
+the correct implementation is always used
+
+Definition consistency
+
+A super rule set contains the union of all Rave definitions
+from all included rule sets.
+
+The Rave compiler enforces that:
+
+all definitions with the same name have the same signature
+
+Normally this consistency is guaranteed through root/inherited modules,
+but it is also possible to:
+
+add additional definitions not declared in a root module

@@ -1,0 +1,1779 @@
+Appendix: Syntax
+This appendix describes the lexical structure of the language: the characters that may appear in a rule set file and how they are collected into lexical units, or tokens.
+
+==============
+Character set
+==============
+
+For details about allowed characters, see the sections about Variables, Identifiers and Strings.
+
+==================
+White space
+==================
+
+White space is used to separate adjacent Tokens and to make the layout readable. The characters blank, tab and new line make up the white space. The characters blank and tab inside a string constant are part of the constant and are not treated as white space.
+The Rave programmer should use white space to make the program as easy to read as possible. The Rave compiler ignores the white space. All kinds of white space are treated in the same way and there are no explicit limits on the line length or the number of lines. The compiler reads the program from left to right and top to bottom and creates a stream of tokens. Only the order matters and not the position of the tokens.
+
+==========
+COMMENTS
+==========
+
+A comment in the language begins with the characters /* and ends with the first subsequent occurrence of the characters */.
+
+Comments may contain any number of characters and are treated as white space by the compiler.
+
+EXAMPLE
+
+The following example shows a legal comment:
+
+/* A comment */
+
+NOTE
+
+Comments cannot be nested.
+The following example is not a legal construction:
+
+/* The following part has been commented out:
+ %aa% = 13; /* The variable a */
+ %bb% = 17; /* The variable b */
+*/
+==========
+Tokens
+==========
+
+The Rave compiler reads the rule set and collects the individual characters into a sequence of lexical tokens, which are then processed further by the compiler. There are seven token classes: operators, separators, variables, identifiers, keywords, reserved words and constants.
+When forming tokens, the compiler always produces the longest token possible. Notation is therefore interpreted as the single word notation rather than the unary operator not followed by ation. The latter interpretation is achieved by inserting white space between the two parts.
+
+===========
+OPERATORS
+===========
+
+The language supports unary, binary, and ternary operators.
+
+UNARY OPERATORS
+
+The following unary operators are available:
+
+-   not
+
+BINARY OPERATORS
+
+The following binary operators are available:
+
++   -   *   /   =
+<>  <   <=  >   >=
+and  or  in  mod
+
+NOTES
+
+The minus operator (-) can be used both as:
+
+a unary operator
+
+a binary operator
+
+TERNARY OPERATOR
+
+The language provides one ternary operator (three arguments):
+
+if then else
+
+==============
+Separators
+==============
+
+The separators are:
+( ) , ; : . -> &
+
+==================
+VARIABLES
+==================
+
+Variables are the names assigned to values and function definitions.
+
+A variable:
+
+Can be any name surrounded by percent signs (%)
+
+Is case-insensitive
+
+May include non-alphanumeric characters, but those characters are not distinguished from one another
+
+EXAMPLE
+%VAR1_Begin%   and   %var1-beGIN%   are the same
+
+%var1begin%   and   %var1_begin%   are different variables
+
+NAMING CONVENTIONS (STYLE GUIDELINES)
+
+As a matter of style, variable names should consist only of:
+
+Letters: A–Z, a–z
+
+Digits: 0–9
+
+Underscores: _
+
+Avoid using national (non-ASCII) characters.
+
+===============
+Identifiers
+===============
+
+Identifiers are the names of rules, tables, etc. An identifier is a (non-empty) sequence of letters (A-Z and a-z only), digits and underscores (_). Case is not significant, a_name and A_Name are considered equal. An identifier must not begin with a digit or underscore and it must not have the same spelling as a keyword or a reserved word.
+
+===========================
+Keywords and contexts
+===========================
+
+A number of identifiers are predefined by Rave as keywords and contexts. They are used to access information about flights, crew members, etc. The set of keywords and contexts is system-configurable.
+
+======================
+Reserved words
+======================
+
+The reserved words are a number of identifiers that have special meaning to Rave. Among them are all the built-in functions and traversers:
+abs, abstime, accumulator, add_months, add_weeks, add_years, alias, all, and, and2, any, avg, backwards, bool, booster_assertion, build, by, cache, capi_legs, capi_time, cat, concat, constraint, context, count, cost, current, current_context, deadline, default, delta, durable, earliest, else, end, enddate, endday, enum, export, external, failtext, failobject, false, filter, first, format_int, foreach, format_time, forwards, from, global, group, if, import, in, index, inherits, int, interval_end, interval_start, is_first, is_last, iterator, last, latest, length, let, level, locate, map, matrix, max, max_penalty, maxvalue, min, min_penalty, minvalue, mod, module, msgr, msgx, n, next, nmax, nmin, not, off, on, or, or2, overlap, overshoot_max_limit, overshoot_min_limit, parameter, partition, prev, redefine, reltime, remark, require, root, round_down, round_down_month, round_down_offset, round_down_week, round_down_year, round_up, round_up_month, round_up_offset, round_up_week, round_up_year, rule, rule_on, scale_time, set, severity, sqrt, startdate, startday, string, string_to_int, substr, sum, table, then, time, times_index, time_of_day, time_of_week, to, total_rule_penalty, transform, true, tw_while, use, valid, void, when, where, while, y
+Contexts, transforms and built-in iterators are also reserved words. Contexts and transforms are system-configurable, similar to the keywords.
+Note
+The word cost is treated in a special way by the Rave compiler. It can be used as a module name, but not as a general identifier.
+Note
+It is strongly recommended not to use reserved words in Rave Publisher PDL in Rave code.
+
+
+============================
+DATA TYPES AND CONSTANTS
+============================
+
+The lexical class of constants includes six different data types:
+
+Integers
+
+Booleans
+
+Strings
+
+Relative times
+
+Absolute times
+
+Enums
+
+This section covers the following data types:
+
+Int
+
+Bool
+
+String
+
+Reltime
+
+Abstime
+
+Enum
+
+SYNTAX (BNF)
+data_type ::=
+    int | bool | string | reltime | abstime | qual_enum_ident
+
+const ::=
+    int_const | bool_const | string_const | reltime_const | abstime_const | qual_enum_value
+
+int_const ::=
+    one or more digits (0-9)
+
+bool_const ::=
+    true | false
+
+string_const ::=
+    string+
+
+string ::=
+    A sequence of characters enclosed in double quotes (").
+    All characters can be used except:
+        "   \   newline
+    The following escape combinations can be used:
+        \"   \\   \n (newline)   \t (tab)
+
+reltime_const ::=
+    hour : minute
+
+hour ::=
+    int_const
+
+minute ::=
+    int_const
+
+abstime_const ::=
+    month day year reltime_const
+  | month_day year reltime_const
+  | day month year [ reltime_const ]
+  | day month_year [ reltime_const ]
+
+month ::=
+    jan | feb | mar | apr | may | jun | jul | aug | sep | oct | nov | dec
+
+month_day ::=
+    A month followed by a day without intervening space.
+
+month_year ::=
+    A month followed by a year without intervening space.
+
+day ::=
+    int_const
+
+year ::=
+    int_const
+
+enum_def ::=
+    gexport enum enum_ident =
+        enum_values
+        [ remark ; ]
+    end
+
+enum_ident ::=
+    ident
+
+enum_values ::=
+    enum_values enum_value
+  | enum_value
+
+enum_value ::=
+    ident remark ;
+
+qual_enum_value ::=
+    [ module . ] enum_value
+
+qual_enum_ident ::=
+    [ module . ] enum_ident
+
+DATA TYPE DEFINITIONS
+INT
+
+Integer constants consist of a (non-empty) sequence of digits.
+
+BOOL
+
+A boolean constant is one of the reserved words:
+
+true
+
+false
+
+STRING
+
+A string constant is a (possibly empty) sequence of characters enclosed in double quotes (").
+
+There is no explicit limit to the length of a string.
+
+A string in Rave can contain any printable character in the ISO-8859-1 (Latin-1) or UTF-8 character set.
+
+RELTIME
+
+A relative time constant consists of:
+
+an integer constant
+
+followed by a colon (:)
+
+followed by another integer constant
+
+It expresses hours and minutes.
+
+Example format:
+
+HOUR:MINUTE
+
+ABSTIME
+
+An absolute time constant expresses a fixed point in time.
+
+NOTE:
+When using Rave with Crew & Ops Management solutions, the maximum limit of Abstime is:
+
+31dec2036
+
+ENUM
+
+The reserved word enum defines an enumeration type and all legal values in that type.
+
+Rules/behavior:
+
+Each enum type and all its values must be unique within its scope.
+
+If an enum type is exported, then all its values are also exported.
+
+The same is true for global export.
+
+Enum values of the same type can be compared with each other.
+
+The first enum value in a type is the smallest.
+
+
+============================
+COMPLETE SYNTAX
+============================
+The Rave grammar rules are sorted alphabetically, except for the starting rule
+that is placed first. The BNF notation is explained in: “BNF notation”
+(see: Conventions).
+
+GRAMMAR (BNF)
+─────────────
+
+toplevel
+  ::=
+    [fileheader] import* def*
+
+abstime_const
+  ::=
+    month day year reltime_const
+  | month_day year reltime_const
+  | day month year [reltime_const]
+  | day month_year [reltime_const]
+
+accumulator
+  ::=
+    gexport accumulator acc_ident (formal_args) =
+      expression ;
+      [iterator = iter_ident ;]
+      (attribute)*
+    end
+
+acc_ident
+  ::=
+    ident
+
+additive
+  ::=
+    +
+  | -
+
+anypar
+  ::=
+    (
+  | )
+
+assertion
+  ::=
+    booster_assertion = expr
+
+attribute
+  ::=
+    attr_ident [(formal_args)] = expression ;
+  | external expression ;
+
+attr_ident
+  ::=
+    ident
+
+bool_const
+  ::=
+    true
+  | false
+
+bykeys
+  ::=
+    by (keys)
+
+cache_args
+  ::=
+    cache_range_set
+  | qual_set_ident
+
+cache_range_set
+  ::=
+    set (rconst, rconst)
+
+cluster
+  ::=
+    row*
+
+clusters
+  ::=
+    clusters & cluster
+  | cluster
+
+cond_use
+  ::=
+    #if ident ( (ident | NUMBER) ) use* end
+
+condition
+  ::=
+    expr
+
+conditions
+  ::=
+    exprs
+
+const
+  ::=
+    bool_const
+  | abstime_const
+  | reltime_const
+  | int_const
+  | string_const
+  | enum_const
+
+constraint_def
+  ::=
+    gexport constraint [ponoff] constr_name =
+      [valid ;]
+      (foreach ;)*
+      constr_condition ;
+      [nonadditive(formal_args) = expr ;]
+      [cost [(expr)] = expr ;]
+      [failtext ;]
+      [remark ;]
+      [group_def]
+    end
+
+constr_condition
+  ::=
+    sum(c_set, expr) [where (expr)] c_op c_rhs
+  | count(c_set)     [where (expr)] c_op c_rhs
+
+constr_name
+  ::=
+    ident
+
+c_op
+  ::=
+    <= | >= | =
+
+c_rhs
+  ::=
+    expr
+
+c_set
+  ::=
+    context
+  | transform_ident
+
+context
+  ::=
+    ident
+  | default_context
+  | current_context
+
+data_type
+  ::=
+    int
+  | bool
+  | string
+  | reltime
+  | abstime
+  | qual_enum_ident
+
+dashes
+  ::=
+    -
+  | dashes , -
+
+day
+  ::=
+    int_const
+
+deadline
+  ::=
+    deadline = expr
+
+def
+  ::=
+    level_def
+  | var_def
+  | rule_def
+  | parent_rule_def
+  | constraint_def
+  | table_def
+  | matrix_def
+  | set_def
+  | enum_def
+  | iter_def
+  | group_def
+  | filter_def
+  | require
+  | use
+  | assertion
+
+delta
+  ::=
+    delta = (_ | NUMBER | reltimeconst)
+
+direction
+  ::=
+    forwards
+  | backwards
+
+edefault
+  ::=
+    dashes -> results ;
+
+enum_const
+  ::=
+    qual_enum_value
+
+enum_def
+  ::=
+    gexport enum enum_ident =
+      enum_values
+      [remark ;]
+    end
+
+enum_ident
+  ::=
+    ident
+
+enum_value
+  ::=
+    ident remark ;
+
+enum_values
+  ::=
+    enum_values enum_value
+  | enum_value
+
+exception
+  ::=
+    startdate = expr ;
+  | enddate   = expr ;
+  | startday  = expr ;
+  | endday    = expr ;
+
+expr
+  ::=
+    qual_var_ident [pexprs]
+  | keyword        [pexprs]
+  | function       [pexprs]
+  | const
+  | context (context, expr)
+  | (expr)
+  | expr multiplicative expr
+  | expr additive       expr
+  | expr relational     expr
+  | expr logical        expr
+  | expr membership qual_ident
+  | if expr then expr else expr
+  | + expr
+  | - expr
+  | not expr
+  | trav_ident  (transform_ident)
+  | trav_ident  (trav_key, expr) [trav_spec]
+  | trav_ident  (trav_key [trav_spec], expr)
+  | trav_ident0 (trav_key) [trav_spec]
+  | trav_ident0 (trav_key [trav_spec])
+  | trav_cat
+
+exprs
+  ::=
+    exprs , expr
+  | expr
+
+extfname
+  ::=
+    expr
+
+failtext
+  ::=
+    failtext expr
+  | failtext (lhs, rhs) = expr ;
+
+failobject
+  ::=
+    failobject = expr
+
+fieldname
+  ::=
+    string
+  | ident
+
+fileheader
+  ::=
+    module module_ident [module_type]
+  | root module module_ident
+  | root rule set module_ident ;
+
+filter_def
+  ::=
+    gexport filter filter_ident = qual_level_ident (expr) ;
+
+filter_ident
+  ::=
+    ident
+
+foreach
+  ::=
+    foreach lvar in foreach_set [alias(expr)] [ispec]
+
+foreach_set
+  ::=
+    set_ident
+  | enum_ident
+  | range_set
+
+formal_arg
+  ::=
+    data_type ident [cache cache_args]
+
+formal_args
+  ::=
+    formal_args , formal_arg
+  | formal_arg
+
+from
+  ::=
+    from (trav_point [where])
+  | from (current)
+
+function
+  ::=
+    ident
+
+gexport
+  ::=
+    [redefine] [[global] export]
+
+groupmem
+  ::=
+    qual_ident
+
+groupmems
+  ::=
+    groupmems , groupmem
+  | groupmem
+
+group_def
+  ::=
+    group group_ident = [groupmems] [remark] ;
+  | group group_ident [remark] ;
+
+group_ident
+  ::=
+    ident
+
+hour
+  ::=
+    int_const
+
+ident
+  ::=
+    One or more characters: A-Z, a-z, 0-9 and underscore are allowed.
+
+import
+  ::=
+    import module_ident ;
+
+inequality
+  ::=
+    <= | < | > | >=
+
+int_const
+  ::=
+    one or more digits, 0-9
+
+ispec
+  ::=
+    where (expr) [while (expr)]
+  | while (expr) [where (expr)]
+
+iter_def
+  ::=
+    gexport iterator iter_ident ;
+  | gexport iterator iter_ident =
+      [remark_semi]
+    end
+  | gexport iterator iter_ident =
+      partition (qual_ident) [bykeys]
+      [remark_semi]
+    end
+  | gexport iterator iter_ident =
+      qual_iter_ident ;
+
+iter_ident
+  ::=
+    ident
+
+key
+  ::=
+    expr
+  | map (trav_key, keys)
+
+keys
+  ::=
+    key , keys
+  | key
+
+keyword
+  ::=
+    ident
+
+let
+  ::=
+    ident = expr
+
+lets
+  ::=
+    lets , let
+  | let
+
+level_body
+  ::=
+    when (bool_const);
+  | (is_first | is_last)(qual_ident) when (expr);
+
+level_def
+  ::=
+    gexport level ident ;
+  | gexport level level_ident =
+      level_body
+      [remark ;]
+    end
+  | gexport level level_ident = qual_ident ;
+
+level_ident
+  ::=
+    ident
+
+lhs
+  ::=
+    formal_arg
+
+local_var
+  ::=
+    let lets ;
+
+logical
+  ::=
+    and | and2 | or | or2
+
+lvar
+  ::=
+    ident
+
+matrix_def
+  ::=
+    matrix matrix_ident [pformal_args] =
+      [alias lets ;]
+      condition , condition -> result_var ;
+      test_cases ;
+      matrix_row+
+    end
+
+matrix_ident
+  ::=
+    ident
+
+matrix_outcome
+  ::=
+    expr
+  | -
+
+matrix_outcomes
+  ::=
+    matrix_outcomes , matrix_outcome
+  | matrix_outcome
+
+matrix_row
+  ::=
+    test_case ; matrix_outcomes ;
+
+max_penalty
+  ::=
+    max_penalty = (_ | NUMBER)
+
+min_penalty
+  ::=
+    min_penalty = (_ | NUMBER)
+
+membership
+  ::=
+    [not] in
+
+minute
+  ::=
+    int_const
+
+module
+  ::=
+    module_ident
+  | _topmodule
+
+module_ident
+  ::=
+    ident
+
+module_type
+  ::=
+    inherits module_ident
+
+month
+  ::=
+    jan | feb | mar | apr | may | jun | jul | aug | sep | oct | nov | dec
+
+month_day
+  ::=
+    a month followed by a day without intervening space.
+
+month_year
+  ::=
+    a month followed by a year without intervening space.
+
+multiplicative
+  ::=
+    * | / | mod
+
+NUMBER
+  ::=
+    an integer in the range -2,147,483,648 to +2,147,483,647
+
+opt_default
+  ::=
+    [default expr]
+
+opt_sep
+  ::=
+    [, string_const]
+
+outcome
+  ::=
+    expr
+
+outcomes
+  ::=
+    outcomes , outcome
+  | outcome
+
+overshoot_max_limit
+  ::=
+    overshoot_max_limit = expr
+
+overshoot_min_limit
+  ::=
+    overshoot_min_limit = expr
+
+parent_rule_def
+  ::=
+    gexport rule [ponoff] rule_name =
+      [valid ;]
+      [module .] rule_name is legal ;
+      [remark "text" ;]
+    end
+
+par_body
+  ::=
+    parameter par_const [par_limit]
+
+par_const
+  ::=
+    sign_const
+  | _
+
+par_def
+  ::=
+    gexport [durable] var_ident =
+      par_body
+      [remark]
+    ;
+
+par_limit
+  ::=
+    minvalue par_const
+  | maxvalue par_const
+  | minvalue par_const maxvalue par_const
+  | maxvalue par_const minvalue par_const
+
+patfield
+  ::=
+    fieldname
+  | anypar fieldname , fieldname anypar
+  | relop fieldname
+
+patfields
+  ::=
+    patfields , patfield
+  | patfield
+
+pexprs
+  ::=
+    (exprs)
+
+pformal_args
+  ::=
+    (formal_args)
+
+ponoff
+  ::=
+    (on | off)
+
+prim_expr
+  ::=
+    function [pexprs]
+  | void (data_type)
+  | context (context, expr)
+
+qual_enum_ident
+  ::=
+    [module .] enum_ident
+
+qual_enum_value
+  ::=
+    [module .] enum_value
+
+qual_ident
+  ::=
+    [module .] ident
+
+qual_iter_ident
+  ::=
+    [module .] iter_ident
+
+qual_level_ident
+  ::=
+    [module .] level_ident
+
+qual_matrix_ident
+  ::=
+    [module .] matrix_ident
+
+qual_rule_ident
+  ::=
+    [module .] rule_name
+
+qual_set_ident
+  ::=
+    [module .] set_ident
+
+qual_var_ident
+  ::=
+    [module .] var_ident
+
+range
+  ::=
+    anypar sign_const , sign_const anypar
+  | relop sign_const
+  | relop sign_const or  relop sign_const
+  | relop sign_const and relop sign_const
+
+range_set
+  ::=
+    set (start, end [, step])
+
+rconst
+  ::=
+    [+ | -] const
+
+relational
+  ::=
+    = | <> | < | <= | > | >=
+
+relop
+  ::=
+    <> | < | <= | > | >=
+
+reltime_const
+  ::=
+    hour : minute
+
+remark
+  ::=
+    remark role_remarks
+
+remark_semi
+  ::=
+    remark ;
+
+require
+  ::=
+    require string
+
+resfield
+  ::=
+    fieldname opt_default
+  | traverser_ident (fieldname opt_sep) opt_default
+
+resfields
+  ::=
+    resfields , resfield
+  | resfield
+
+result_var
+  ::=
+    gexport [durable] [data_type] var_ident
+
+result_vars
+  ::=
+    result_var , result_vars
+  | result_var
+
+results
+  ::=
+    result, results
+  | result
+
+rhs
+  ::=
+    formal_arg
+
+role
+  ::=
+    ident
+
+role_remark
+  ::=
+    [role] [+] string
+
+role_remarks
+  ::=
+    role_remark , role_remarks
+  | role_remark
+
+row
+  ::=
+    test_cases -> outcomes ;
+
+rule_condition
+  ::=
+    expr inequality expr
+
+rule_def
+  ::=
+    gexport rule [ponoff] rule_name =
+      [valid ;]
+      (exception ;)*
+      (rule_condition | _) ;
+      [delta ;]
+      [cost = expr ;]
+      [max_penalty ;]
+      [min_penalty ;]
+      [failtext ;]
+      [failobject ;]
+      [severity ;]
+      [deadline ;]
+      [overshoot_min_limit ;]
+      ...
+    end
+
+rule_name 
+    ::=
+        ident
+
+sep 
+    ::=
+        string
+
+setcont 
+    ::=
+        [parameter] set_body [remark] | external data_type setextfname . fieldname [remark]
+
+setextfname 
+    ::=
+    ( expr )
+  | qual_var_ident [pexprs]
+  | keyword [pexprs]
+  | string
+
+set_body 
+    ::=
+    set_body , sign_const
+  | sign_const
+
+set_def 
+    ::=
+    gexport set set_ident = setcont ;
+
+set_ident 
+    ::=
+        ident
+
+severity 
+    ::=
+        severity = expr
+
+sign_const 
+    ::=
+        [ + | - ] const
+        | qual_enum_ident
+
+string_const 
+    ::=
+        string+
+
+string 
+    ::=
+        A sequence of characters enclosed in double quotes (").
+        All printable ISO-8859-1 or UTF-8 characters can be used except:
+            "   \   newline
+        The following escape combinations can be used:
+            \"   \\   \n (newline)   \t (tab)
+
+table_def 
+    ::=
+        table table_ident [pformal_args] =
+            [alias lets ;]
+            conditions -> result_vars ;
+            tablecont
+        end
+
+table_ident 
+    ::=
+        ident
+
+tablecont 
+    ::=
+        clusters
+    | external [data_type] extfname ;
+            patfields -> resfields ;
+            [edefault]
+            [remark_semi]
+
+test_case 
+    ::=
+        sign_const
+    | -
+    | y
+    | n
+    | range
+
+test_cases 
+    ::=
+        test_cases , test_case
+    | test_case
+
+text 
+    ::=
+        One or more characters in ISO-8859-1
+
+to 
+    ::=
+        to ( trav_point [where] )
+    | to ( current )
+
+towhile 
+    ::=
+        to
+    | while
+
+transform_ident 
+    ::=
+        ident
+
+trav_ident 
+    ::=
+        sum | avg
+    | max | min
+    | all | any
+    | first | last
+    | next | prev
+    | earliest | latest | to
+
+trav_ident0 
+    ::=
+        count
+    | is_first | is_last
+
+trav_cat 
+    ::=
+        cat (trav_key, ident, ident [sep]) [trav_spec]
+    | cat (trav_key [trav_spec], ident, ident, [sep])
+
+trav_key 
+    ::=
+        qual_level_ident ( expr )
+    | transform_ident
+
+trav_point 
+    ::=
+        first
+    | last
+    | next
+    | prev
+
+trav_spec 
+    ::=
+        from [towhile] [where]
+    | towhile [where]
+    | where [while]
+
+use 
+    ::=
+        use module_ident
+    | cond_use ;
+
+valid 
+    ::=
+        valid expr
+
+var_body 
+    ::=
+        data_type
+    | expr
+    | _
+
+var_def 
+    ::=
+        gexport [durable] var_ident [pformal_args] =
+            [ local_var ]
+            var_body
+            [remark] ;
+
+var_ident 
+    ::=
+        % one or more characters, % is not legal %
+
+where 
+    ::=
+        where ( expr )
+
+while 
+    ::=
+        [direction] while ( expr )
+
+year 
+    ::=
+        int_const
+
+Appendix: Modelling information
+This appendix gives information that is useful for developers when modelling with Rave and working with performance.
+It is important to follow up on the performance regularly when modifying Rave code. Performance problems detected and addressed at an early stage are much easier to solve than removing bottlenecks later on.
+A useful tool when analyzing Rave code is Rave Profiler, which gives a view of the internal function calls in the Rave code.
+
+=========================================
+IMPROVING THE PERFORMANCE OF RAVE CODE
+=========================================
+
+The following sections give suggestions on what to study when addressing performance problems in Rave code.
+
+Contents
+
+Dependency of rules
+
+Range
+
+Caching
+
+Function caches
+
+Durable caches for variables
+
+Transforms
+
+Levels
+
+Number of rules
+
+Order of calculation in rules
+
+Complexity of rules
+
+Number of objects
+
+Vertical constraints
+
+Minimize the input to the optimizer
+
+Using the Column Generation method
+
+Tune the optimizer
+
+Where statements in constraints
+
+DEPENDENCY OF RULES
+
+Are the rules and variables attributes at the correct level, or are they evaluated on smaller objects than necessary?
+
+Making a rule unnecessarily leg-dependent will cause Rave to check the rule on every leg. Mixing dependencies may also affect caching (see Caching).
+
+RANGE
+
+The range of a variable or a rule is the set of level objects needed to evaluate it.
+
+For optimization runs, it is important that the range is as small as possible. If it is too large there will be a lot of unnecessary Rave evaluations.
+
+A leg rule or variable with a range of chain is the worst case: each time the value is computed on a leg you need attributes from all legs in the chain.
+
+Example 1
+
+```
+/* Roster range */
+%connection_time1% = next(leg(roster), departure) - arrival;
+
+/* Duty range */
+%connection_time2% = next(leg(duty), departure) - arrival;
+```
+
+The second definition is much better, since Rave will only need to recalculate the connection time if the duty changes instead of every time the roster changes.
+
+Example 2
+
+
+Time window calculations are examples of a type of definition that often get a bad range. A naive implementation that calculates the block time in 24 hours might look like this:
+
+%block_in_24_h% =
+  let end_24_h = departure + 24:00;
+  sum(leg(chain), %block_before%(end_24_h))
+    from (current) where (departure < end_24_h);
+
+
+Since the legs are always ordered in time, the computational complexity can be lowered using while instead of where:
+
+%block_in_24_h% =
+  let end_24_h = departure + 24:00;
+  sum(leg(chain), %block_before%(end_24_h))
+    from (current) while (departure < end_24_h);
+end
+
+
+The result is the same, but the range will be defined as:
+
+“all legs up to the first one outside the time window”
+
+instead of:
+
+“all legs to the end of the chain except the ones outside the time window”.
+
+Often domain knowledge is useful when trying to limit the range. If there always is at least a day off between trips (due to rules and levels), chain can be replaced with trip in Example 2.
+
+CACHING
+
+Examine code with a high number of calls.
+
+Are more calculations than necessary done?
+
+Could the number of calls be reduced by more efficient caching?
+
+Generally, only the value of a variable or a rule can be cached, not an expression that is part of a definition.
+
+Example 1
+
+In the definition:
+
+```
+%v% = %a% + sum(leg(duty), %b%);
+```
+
+the `sum` expression cannot be cached, but in the following definition it can be cached:
+
+```
+%sum% = sum(leg(duty), %b%);
+%v% = %a% + %sum%;
+```
+
+If an expression is used in more than one place it should be made a separate definition.
+
+Mixing dependencies in definitions may also cause caching problems.
+
+Example 2
+
+%trip_val% = sum(leg(trip), %leg_val%);
+%leg_val% =
+  if %trip_property% then %leg_property_1% * %factor%
+  else %leg_property_2% * %factor%;
+
+
+In this example %leg_val% has a trip range, since it depends on %trip_property%. Every time the trip changes, %leg_val% must be recomputed on each leg.
+
+Solution: move the use of %trip_property% up to the trip level:
+
+%trip_val% =
+  if %trip_property% then sum(leg(trip), %leg_val_1%)
+  else sum(leg(trip), %leg_val_2%);
+%leg_val_1% = %leg_property_1% * %factor%;
+%leg_val_2% = %leg_property_2% * %factor%;
+
+
+Now the values of %leg_val_1% and %leg_val_2% can be cached and reused. If the trip changes, it will only have to be computed on added legs.
+
+Function values are never cached, but you can create cache variables for the most common arguments.
+
+Example 3
+
+```
+%crew_category_trip_start% = %crew_category%(trip.%start%);
+```
+
+Context values (for example total block time in a certain context) can be cached and reused independently of any chain if such chain-independent variable is made available.
+
+Example 4
+
+%sp_total_block% =
+  context(sp_crrs, sum(chain_set, %total_block%));
+
+
+Sometimes external tables created by scripts can be used to cache certain values in a more efficient way (for example values calculated on preassignments and history).
+
+FUNCTION CACHES
+
+It is possible to add a special annotation on a user-defined function to cache calls with specific arguments.
+
+This should only be used after analysis of profiling runs, since extra cache slots will use application memory. Function caches may even make execution slower if used inappropriately.
+
+Syntax
+
+```
+formal_arg ::=
+    data_type ident [cache cache_args]
+
+cache_args ::=
+    cache_range_set | qual_set_ident
+
+cache_range_set ::=
+    set (rconst, rconst)
+
+rconst ::=
+    [ + | - ] const
+```
+
+Example
+
+/* Cache a function for the arguments 1, 2, and 3. */
+%fun1%(int i cache set(1,3)) = ...
+
+/* Cache a function for the strings "CAB" and "COC" */
+set category = "CAB", "COC";
+%fun2%(string s cache category) = ...
+
+DURABLE CACHES FOR VARIABLES
+
+The reserved word durable gives a hint to some applications (for example Crew Pairing Optimizer) that they should cache a variable more efficiently.
+
+In particular, it should be possible to move an object (for example a leg) in between two trips and still keep the variable value.
+
+Before marking a variable as durable, do performance analysis to find candidates:
+
+The computations should be heavy and numerous
+
+The dependency of the variable should be equal to the range
+(e.g., a leg variable not dependent on any other level object in the chain)
+
+Marking too many variables as durable increases memory usage significantly.
+
+TRANSFORMS
+
+The syntax:
+
+count(ac_rotations_ref)
+
+generates much faster code than:
+
+transform(ac_rotations_ref, count(leg_set))
+
+The latter “transform syntax” is demanding to compute and should be avoided if possible.
+
+LEVELS
+
+The level structure is used a lot in all Rave evaluations, and that is why levels should be modelled with simple expressions.
+
+Too many levels will slow down the system even if they are rarely used.
+
+Avoid parallel level hierarchies if possible.
+
+NUMBER OF RULES
+
+It can be a better approach to combine a few simple rules instead of using one slightly more complex rule.
+
+ORDER OF CALCULATION IN RULES
+
+Always check simple conditions first in rules. More complex conditions might not have to be calculated.
+
+For example, use the valid statement in rules (calculated first) to check that you are within the planning period.
+
+Example 1
+
+Consider a rule that limits the number of inexperienced crew on a leg. It uses a transform `equal_trips` that returns all references to the same trip from different crew rosters:
+
+```
+rule max_inexperienced =
+  count(equal_trips where (%inexperienced%)) <= 1;
+end
+```
+
+A `valid` statement can make this more efficient:
+
+```
+rule max_inexperienced =
+  valid %inexperienced%;
+  count(equal_trips where (%inexperienced%)) <= 1;
+end
+```
+
+Now the transform is only evaluated on the trips of inexperienced crew, rather than on every single trip.
+
+Boolean operator short-circuiting
+
+
+The boolean operators and and or are order-dependent:
+
+In %x% and %y%, %y% is evaluated only if %x% is true.
+
+In %x% or %y%, %y% is evaluated only if %x% is false.
+
+NOTE:
+This does not apply to multiplication. In %x% * %y%, %y% is always evaluated even if %x% is 0.
+
+Example 2
+
+Rewrite:
+
+```
+%weight%*%cost%
+```
+
+to:
+
+```
+if %weight%=0 then 0 else %weight%*%cost%
+```
+
+to avoid calculating the right-hand side when possible.
+
+---
+
+COMPLEXITY OF RULES  
+-------------------
+
+You often get a better end result if you can rewrite a rule to be slightly more restrictive, but less complex and faster.
+
+---
+
+NUMBER OF OBJECTS  
+-----------------
+
+Collect objects that never are spread in as large blocks as possible.
+
+Example:
+It is better to create a single ten-day activity compared to ten one-day activities.
+
+Using fewer objects makes it easier for both the optimizer and Rave and may improve performance and memory consumption significantly.
+
+---
+
+VERTICAL CONSTRAINTS  
+--------------------
+
+Use as few vertical constraints as possible, as they affect both setup and optimization time.
+
+---
+
+MINIMIZE THE INPUT TO THE OPTIMIZER  
+-----------------------------------
+
+For example, there is no reason to allow trips/rosters that you would not accept in the final solution — even if they are formally legal.
+
+---
+
+USING THE COLUMN GENERATION METHOD  
+----------------------------------
+
+There are more tips on how to write efficient code for the Column Generation method in *Crew Pairing Optimizer Reference*.
+
+---
+
+TUNE THE OPTIMIZER  
+------------------
+
+Tuning the optimizer can give very big performance improvements.
+
+Crew Rostering comes with a self-tuning Python script that has proven efficient.
+
+---
+
+WHERE STATEMENTS IN CONSTRAINTS  
+-------------------------------
+
+Using `where` statements where appropriate may improve performance with Crew Pairing Optimizer, since these are evaluated more efficiently than the corresponding `if` statement.
+
+Example
+~~~~~~~
+More efficient:
+
+```
+constraint ex1 =
+foreach base in active_bases;
+  sum(default_context, %contribution%)
+       where (base = homebase) <= %my_limit%;
+end
+```
+
+Less efficient:
+
+```
+constraint ex2 =
+foreach base in active_bases;
+  sum(default_context, if base = homebase
+         then %contribution% else 0) <= %my_limit%;
+end
+```
+
+This is true as long as the `where` statement removes a significant part of the instances (more than approximately 70% of instances).
+
+---
+
+===========================
+RULE EXCEPTION MECHANISM
+===========================
+
+Sometimes you want to avoid applying one or more rules that make a chain illegal. This is possible with the rule exception mechanism.
+
+Example
+
+Crew member Smith exceeds his block time limit by ten minutes. Instead of changing Smith’s roster you can create a rule exception for him. The exception applies only to Smith and only for a relevant period of time within his roster.
+
+HOW TO USE RULE EXCEPTIONS
+
+To use the rule exception mechanism you must do two things:
+
+Configure the system to use the rule exception mechanism.
+See: Rule exceptions (in the Rules documentation).
+Contact your service manager for more information.
+
+Modify your rules so they know how to behave when an exception is applied.
+If you don’t do this, the rule will not change when rule exceptions are activated.
+
+HOW A RULE CAN BEHAVE UNDER AN EXCEPTION
+
+Rules can have two types of behavior when exceptions are created:
+
+Less restrictive during the exception period (e.g., increase/relax a limit).
+
+Turned off during the exception period (rule ignored for that scope/time).
+
+The examples under Different scopes for exceptions show how to include these behaviors in a Rave rule definition.
+
+IMPORTANT NOTE ABOUT “<” VS “<=” WITH EXTENSIONS
+
+Normally, these are equivalent:
+
+x < 6
+
+x <= 5
+
+However, with rule exceptions, this expression is a trap:
+
+x < 6 + %waive_extension% ❌
+
+Why it fails (conceptually):
+
+When creating the exception, the system stores the difference between the actual value and the limit in the rule_exceptions etable as waive_extension.
+
+Example: actual is 10, limit is 6 → extension stored is 4
+
+The evaluation becomes: 10 < 6 + 4 → 10 < 10 → false (always fails when it lands exactly on the boundary)
+
+So you should always use “<=” for this pattern, for example:
+
+x <= 5 + %waive_extension% ✅
+
+DIFFERENT SCOPES FOR EXCEPTIONS
+
+The scope of the exception defines which part of the roster the exception applies to. It is tightly related to the scope of the rule.
+
+Example idea:
+
+If a rule works on the month level, the exception should also be on the month level.
+
+In the example below, the scope is month.
+
+Example: Modifying a monthly block time rule
+
+Original rule (no exceptions):
+
+Rule month_max_block_time
+  %month_block_time% <= %month_max_block_time%;
+  REMARK "Maximum block time allowed in one month.";
+END
+
+Version 1 — Changing the limit (preferred when possible)
+
+This is usually preferable to switching the rule off. Works well for rules expressed as:
+
+INTEGER
+
+RELTIME
+
+ABSTIME
+
+Modified rule:
+
+Rule month_max_block_time
+  %month_block_time% <= %month_max_block_time% +
+                        %month_extension_rel%;
+  REMARK "Maximum block time allowed in one month.";
+  startdate = %month_waive_sdate%;
+  enddate = %month_waive_edate%;
+END
+
+
+Notes about the dictionary variables:
+
+%month_extension_rel%, %month_waive_sdate%, %month_waive_edate%
+are provided by your rule exception configuration.
+
+You should not define them yourself.
+
+Names may differ in your implementation.
+
+Scope mapping idea:
+
+Each exception scope typically has its own set of dictionary variables.
+
+Example: if you have a trip-level scope, you’d expect something like:
+
+%crr_extension_rel%, %crr_waive_sdate%, %crr_waive_edate%
+
+Which extension variable to use:
+
+For ABSTIME / RELTIME rules: use %<scope>_extension_rel%
+
+For integer rules: use %<scope>_extension_int%
+
+Important detail:
+
+extension_int and extension_rel are always positive.
+
+Therefore:
+
+For a less-than/less-or-equal limit: add the extension.
+
+For a greater-than rule: subtract the extension.
+
+Version 2 — Turning off the rule (when it’s hard to modify)
+
+Some rules aren’t easy to relax safely; then you can disable them during the exception scope.
+
+Modified rule:
+
+Rule month_max_block_time
+  VALID NOT %month_waive_rule%;
+  %month_block_time% <= %month_max_block_time%;
+  REMARK "Maximum block time allowed in one month.";
+  startdate = %month_waive_sdate%;
+  enddate = %month_waive_edate%;
+END
+
+
+Notes about the dictionary variables:
+
+%month_waive_rule%, %month_waive_sdate%, %month_waive_edate%
+are configured by the rule exception mechanism.
+
+You should not define them yourself.
+
+Similar variables should exist for other scopes too.
+
+CONTROLLING ADDITION OF RULE EXCEPTIONS
+
+Some applications (for example Crew Tracking) allow users to add rule exceptions from the GUI.
+
+In that case, the Rave implementation can include a Rave function called non_except_regexps (typically a table) that returns a list of regular expressions.
+
+Any rules matching these expressions should be excluded from the rule exception feature — meaning users should not be able to add exceptions for them.
+
+Example
+/* List regexps for all rules that shouldn't have any rule exceptions */
+table non_except_regexps(Int entry_nr) =
+  entry_nr -> %non_except_regexp%;
+1 -> "qualifications.trip_crew_has_ac_quals";
+2 -> "qualifications.trip_crew_has_airport_quals";
+3 -> "qualifications.trip_crew_has_cat_quals";
+...
+- -> void_string;
