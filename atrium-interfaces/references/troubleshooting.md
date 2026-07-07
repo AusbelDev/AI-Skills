@@ -28,6 +28,31 @@ Outgoing messages carry a `jcms_responsecode` header. It tells you the dispositi
 A `MESSAGE_BLOCKED` poison message is the most common reason a whole interface appears
 frozen — the same bad message is retried forever, blocking the queue.
 
+## How a trigger fails (the trigger analogue of a poison message)
+
+Triggers don't consume an inbound queue, so they don't `MESSAGE_BLOCKED` — but they have
+their own wedge. A trigger processes its work inside a single transaction: if any write in
+its `on_event` throws, the handler raises and the framework issues a `PlanAction.ROLLBACK`
+of the **entire cycle**. Two consequences make this hard to diagnose:
+
+- **Unrelated rows stop committing too.** Everything the cycle would have written rolls
+  back together, so a throw on record A silently blanks record B. The reported symptom
+  ("table X isn't updating") is often *not* about table X — chase the failing write, not
+  the empty table.
+- **It re-throws every cycle.** A trigger re-evaluates the same work each run, so a bad
+  record wedges the service continuously rather than dropping once. This is why
+  `ioserver clear_hastore` alone doesn't cure it — clearing state just replays the same
+  failing cycle. Fix the throwing write, then clear.
+
+## Constraint violations as a root cause
+
+A frequent reason for a `Calling`-without-`Committing` gap (above) is a value that violates
+a Dave attribute constraint on save — most often a string longer than the column's declared
+`size=N`. Free-text fields (`reason`, comments, descriptions, names) are the usual
+offenders: they overflow only on unusual inputs, so the feed runs for months and then wedges
+the first time an over-length value arrives. When you see a save-time exception, check the
+attribute's `size=` in the model XML against the value being written.
+
 ## System commands (cmsshell)
 
 Enter the shell with `cmsshell`, then:

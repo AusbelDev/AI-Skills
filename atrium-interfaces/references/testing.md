@@ -29,6 +29,14 @@ parser-only logic).
    - `self.assertMaveFixture(...)` — strictly validate the actual values written to the
      database columns. This catches mapping/normalization mistakes.
 
+> **Test against the simulated DB, not hand-mocked objects.** Constraint violations —
+> string longer than a column's `size=N`, missing required fields, unique-index clashes —
+> only surface when the handler writes through the real (simulated) Dave layer. A test that
+> mocks the ARA/Dave objects with plain Python attributes has no column to violate, so it
+> passes while production throws on save. If the behavior you're guarding is "this value
+> must fit the column," the test must go through the simulated schema (Gherkin setup +
+> `assertMaveFixture`), not a stubbed object.
+
 ## What to cover
 
 The existing interfaces converged on three canonical cases — use them as a template:
