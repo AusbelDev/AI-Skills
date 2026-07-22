@@ -125,13 +125,29 @@ Add to `usr/etc/ccf.xml`:
 
 ## Phase 6 — Integrator routing (Camel)
 
-Custom feeds are usually file drops, so wire a file watcher in
-`usr/integrator/routes/clusterroutes.xml` (use `clusterroutes`, not `noderoutes`, when order
-matters):
+Wire the inbound route in `usr/integrator/routes/clusterroutes.xml` (use `clusterroutes`, not
+`noderoutes`, when order matters):
 1. **Global option** to enable message logging:
    `<globalOption key="import_<interface>.msg.log" value="true"/>`
-2. **File watcher** monitoring the import directory.
-3. **Processor**: convert body to string, upload to Filehub, and notify the IOService queue.
+2. **Consumer** — where the message comes from (see transport note below).
+3. **Processor**: convert body to string, upload to Filehub, and notify the IOService queue
+   (`internalXABroker:queue:{{env:CCF_PREFIX}}to.ioservice.<interface>`).
+
+**The transport is the *only* part of the interface that depends on the source.** The parser,
+handler, ioservice XML, `ccf.xml` queues, and tests all consume the message *content* off the
+internal queue and don't care how it arrived. So confirm the source before writing the `<from>`
+— and if it changes later (e.g. "actually it's not a file drop, we pull it from a topic"),
+only this route changes:
+- **File drop** — model on `import_ssim_file`:
+  `<from uri="file://{{env:INTEGRATOR_IMPORT_DIR}}/<interface>?delete=true&amp;readLock=changed"/>`.
+- **Google Pub/Sub pull** — what the current LATAM feeds (clockwork/limops/legality) actually
+  use; a subscription name like `opsfle-out-latam-<thing>-atrium-pull` is the tell. Model on
+  `import_clockwork`: `<route id="import_<interface>" precondition="{{env:ENABLE_GOOGLE_PUBSUB_ROUTES}}">`
+  with `<from uri="google-pubsub://{{env:GOOGLE_PROJECT_ID}}:<subscription>?maxDeliveryAttempts=...&amp;serviceAccountKey=base64:{{env:GOOGLE_SERVICE_KEY}}"/>`.
+
+One thing to verify with the topic/source owner: whether the message body is the **raw payload**
+(what `convertBodyTo String` assumes) or a wrapper (JSON envelope, base64). If wrapped, unwrap
+in the parser — that's the one place the transport choice can leak into the handler code.
 
 ## Phase 7 — Document & commit
 
@@ -154,11 +170,25 @@ order — it's how the existing migrations were done:
 1. **Functional analysis.** Read the legacy script and write down exactly what it does:
    what it clears, what it parses (headers, data rows, markers like a `'0'` meaning
    "illegal"), and what records it writes (target table + every column + start/end times).
+   **When both a requirements doc and the legacy script exist, treat the script as the
+   authoritative spec for behavior** — it's the code that actually runs today. They routinely
+   disagree (field order/names, a rule the doc states but the code never enforces, a default
+   the doc mandates but the script leaves null). Don't silently pick one: list the conflicts
+   and let the user decide, defaulting to the script unless they say otherwise. Also watch for
+   values the doc *claims* are invariant ("owner is always LA") that the sample data or code
+   contradicts — don't bake such a rule into the parser without confirmation.
 2. **Map legacy entities → Atrium (ARA) entities.** Legacy DIG/Dave tables have modern
    equivalents — e.g. clockwork mapped `flight_leg → ground_task`,
    `aircraft_flight_duty → aircraft_ground_asmt`,
    `maintenance_workpackage → maintenance_wp_dd`. Establish this table first.
 3. **Decide on model extensions** for any legacy columns with no home in the standard model.
+   **First grep the `usr/` model layer for the target entity** (e.g.
+   `grep -rn 'entityname="ground_task"' usr/data/config/models/`) — the site may already have
+   extended it for exactly this purpose. Reference feeds share these fields: the same
+   `<extension>` that adds `ac_type`/`aco`/`car`/`maint_number` to `ground_task` (and the OTS
+   `remark`/`severity` fields) is often already present, so a "new" migration needs no schema
+   change at all. Proposing a redundant extension is wasted work and risks a needless
+   `dave_model_migrator` run.
 4. **Re-implement parsing in `parser.py`** — preserve the legacy format quirks but clean up
    the structure.
 5. **Re-implement writes in `handler.py`** using ARA, applying total-state clearing if the

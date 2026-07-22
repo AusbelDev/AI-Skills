@@ -124,8 +124,10 @@ Both patterns share this spine. The references give the exact files and code.
    file (e.g. `ioserver_single1.xml`).
 4. **Declare queues** — add `to.ioservice.<name>` and `from.ioservice.<name>.error` to
    `usr/etc/ccf.xml`.
-5. **Route in the Integrator** — Camel routes in `clusterroutes.xml` (file/custom) or
-   `wsroutes.xml` (SMOG web services).
+5. **Route in the Integrator** — Camel routes in `clusterroutes.xml` (file drop, Pub/Sub
+   pull, or other custom source) or `wsroutes.xml` (SMOG web services). The route is the only
+   piece that depends on *where* the data comes from; everything downstream is
+   transport-agnostic — see `references/ara-interface.md` Phase 6.
 6. **Test** — integration tests with `IOServiceTestBase`; see `references/testing.md`.
 7. **Document & commit** — add to `usr/doc/static/datafeeds.rst`; commit as one logical block.
 

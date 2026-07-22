@@ -52,13 +52,51 @@ The existing interfaces converged on three canonical cases — use them as a tem
 
 ## Running tests
 
+`ioservice_testrunner` needs the Carmen environment (`$CARMSYS`, `$CARMUSR`, `$CARMTMP`) set.
+A bare login shell usually doesn't have these, so run it **through `cmsshell -c`**, which
+sources the environment first. Running the bin directly (`$CARMSYS/bin/ioservice_testrunner`)
+fails with "CARMSYS must be defined" when the env isn't loaded.
+
 ```bash
-$CARMSYS/bin/ioservice_testrunner <test_directory>
+# One test class (fastest feedback loop):
+cmsshell -c 'ioservice_testrunner -c datafeeds.<interface>.test.handler_test.<TestClass>'
+
+# A whole directory — pass the project's python root as the discovery start dir with -s,
+# otherwise discovery may find nothing:
+cmsshell -c 'ioservice_testrunner -s usr/lib/python usr/lib/python/datafeeds/<interface>/test'
 ```
 
-`ioservice_testrunner` discovers and runs the datafeed tests. After a model extension, run
-`dave_model_migrator` first so the simulated schema matches your new fields — otherwise
-fixture assertions on those columns will fail confusingly.
+A green run prints `PASSED: N tests OK`; the tool also emits a JSON summary line with
+`failures`/`errors` you can scan. After a model extension, run `dave_model_migrator` first so
+the simulated schema matches your new fields — otherwise fixture assertions on those columns
+will fail confusingly.
+
+## Gotcha: local↔UTC conversion needs timezone data in the fixture
+
+If your handler converts local time to UTC (or back) via `station.toUTCTime(...)` /
+`toLocalTime(...)`, the test's airports must carry timezone data — otherwise the conversion
+returns an *invalid* `AbsTime`, and the downstream `create` fails with a baffling error like
+`Attribute GroundTask.StartTime cannot be null`. A bare `airport` override (just `id`/`name`)
+has no `tzprofile`, so it can't convert.
+
+Seed a minimal profile and point the airports at it (a `00:00` std_offset keeps stored UTC
+equal to the input, which makes assertions easy to reason about):
+
+```gherkin
+Given table "timezone_profile" is overridden with the following
+     | name |
+     | UTC0 |
+Given table "timezone_period" is overridden with the following
+     | tzprofile | validfrom       | std_offset |
+     | UTC0      | 01JAN2000 00:00 | 00:00      |
+Given table "airport" is overridden with the following
+     | id  | name     | tzprofile |
+     | SCL | Santiago | UTC0      |
+```
+
+The reference feeds (clockwork/limops) don't hit this because they store UTC directly and
+never call `toUTCTime` — so their tests get away with bare airports. The moment your feed does
+its own conversion, this becomes mandatory.
 
 ## Debugging failing tests
 
@@ -69,3 +107,8 @@ fixture assertions on those columns will fail confusingly.
   handler's runtime lookups.
 - Unique-index errors in a single test message point at missing `RelTime` offsets for
   batch-created records (see the ARA reference).
+- `assertMaveChanges` only lists tables that actually changed. Asserting a no-op row like
+  `('aircraft_ground_asmt', 0, 0, 0)` fails against an actual list that simply omits the
+  table. To assert a table was *not* touched (e.g. an unassigned box that creates no
+  assignment), leave it out of `assertMaveChanges` and instead check
+  `self.assertNotIn('aircraft_ground_asmt', self.get_mave_changes(state_before))`.
