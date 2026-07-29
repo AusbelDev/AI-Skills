@@ -32,6 +32,7 @@ Most requests fall into one of these. Identify which, then follow the matching p
 | :--- | :--- | :--- |
 | **Create** a new interface | "build an interface for…", "import X into Atrium" | Choose a pattern (below), then the matching reference |
 | **Adapt** a core interface | "the standard FlightInput doesn't…", "extend the built-in feed to…" | See "Extending a core interface" below |
+| **Activate** a dormant core interface | "how do I turn on X", "X ships in core but isn't running", "activate the catalog feed" | See "Activating a dormant core interface" below |
 | **Migrate** a legacy script | "port legality.py", "modernize this DIG feed" | `references/ara-interface.md` (migrations are almost always ARA) |
 | **Test** an interface | "write tests for…", "why does my test fail" | `references/testing.md` |
 | **Troubleshoot** a live feed | "message is stuck", "service degraded", "MESSAGE_BLOCKED" | `references/troubleshooting.md` |
@@ -55,7 +56,9 @@ Hold this model in your head; it explains why each step exists.
   internal ActiveMQ/Qpid broker and the outside world (FTP, HTTP, file drops, external MQ).
   `clusterroutes.xml` runs on one node (order-preserving); `noderoutes.xml` runs on all.
 - **Queues (CCF)** — every interface needs queues declared in `usr/etc/ccf.xml`:
-  `to.ioservice.<name>` (inbound) and `from.ioservice.<name>.error` (failures).
+  `to.ioservice.<name>` (inbound) and `from.ioservice.<name>.error` (failures). A
+  *request/response* service returns data, so it needs a third — the response sink
+  `from.ioservice.<name>` — matching the `<sink>` blocks in its activation config.
 
 The environment is rooted at `$CARMSYS` (core install) and `$CARMUSR` (site
 customizations). **Always make changes under `$CARMUSR/`** — never edit `$CARMSYS`. The
@@ -110,6 +113,56 @@ How to adapt depends on what the user needs to change:
 Start by identifying which core service is in play and what specifically must differ, then
 make the smallest change in `usr/` that achieves it. Then test as usual (`references/testing.md`).
 
+## Activating a dormant core interface
+
+Core ships more interfaces than any one site runs. Many sit **fully implemented but
+unwired** — the SMOG contract (`services.xml`, `protocol.xml`, `mapping.xml`) and the
+handler all live under `$CARMSYS`, but nothing generates or runs them. Turning one on is
+neither a *create* (nothing to author) nor an *adapt* (you're changing nothing about its
+behavior) — it's pure plumbing in the `usr/` layer. `catalog_data_output`,
+`roster_output`, and `trip_output` are typical: present in core, absent from every
+`ioservice_builder` config.
+
+**First, confirm it really is dormant.** Locate the contract under
+`$CARMSYS/data/config/smog/v2/std_interfaces.<name>/` and grep the builder configs
+(`usr/data/config/ioservice_builder.xml` and any `$CARMSYS/data/config/ioservice_builder*.xml`)
+for its service name. No registration → dormant, and this checklist applies. If it *is*
+registered, the problem is runtime, not activation — go to `references/troubleshooting.md`.
+
+**Read the contract's `services.xml`** for the exact `<service name>` and `version`, and
+its `protocol.xml` for which protocols it supports (soap / plainxml / plainjson / openapi).
+The `<operation>` shape tells you the pattern: a request-in/response-out getter is
+`requestresponse`; a queue consumer is `subscriber`. Pick the protocol the external client
+needs — that choice drives the route (see below).
+
+Then wire it, entirely under `$CARMUSR/` (clone the closest already-active service of the
+same pattern/protocol — e.g. `FlightState_1_beta_openapi` for a req/response openapi export):
+
+1. **Register** in `usr/data/config/ioservice_builder.xml` — an `<ioservice>` with the right
+   `pattern`, pointing `service-spec`/`protocol-spec`/`service-mapping` at the **core**
+   contract files, and `protocol=` your chosen protocol.
+2. **Generate** — run `ioservice_builder` (see `references/smog-interface.md`). This writes
+   the contract (WSDL for soap, `.json` for openapi) and the handler module into `$CARMTMP`.
+   Verify the generated names before wiring the rest.
+3. **Add the activation config** under `usr/etc/programs/ioservices/datafeeds/<runtime-name>.xml`
+   (queues, sinks, handler binding, error strategy). Clone a same-pattern neighbor.
+4. **Declare queues** in `usr/etc/ccf.xml` — `to.ioservice.<runtime-name>` and
+   `from.ioservice.<runtime-name>.error`, **plus** `from.ioservice.<runtime-name>` if it's
+   request/response (the response sink).
+5. **Route** in the Integrator — the file depends on protocol; see the routing table in
+   `references/smog-interface.md`.
+6. **Include** the activation config in the appropriate `ioserver_*` process file (batch for
+   low-frequency / single-node exports, e.g. `ioserver_batch.xml`; `ioserver_single1.xml` for
+   others), then restart that IOServer and the Integrator.
+
+**Runtime naming.** The generated artifacts — handler module, contract file, activation
+config, and all queues — are named `<ServiceName>_<version>_<protocol>` with **dots in the
+version replaced by underscores**. So `CatalogDataOutput` v`1.beta` over openapi becomes
+`CatalogDataOutput_1_beta_openapi`. This differs from the *contract directory* name
+(`std_interfaces.catalog_data_output_1`) — don't conflate the two.
+
+Then test as usual (`references/testing.md`) and document (`usr/doc/static/datafeeds.rst`).
+
 ## Workflow skeleton (creation)
 
 Both patterns share this spine. The references give the exact files and code.
@@ -124,10 +177,13 @@ Both patterns share this spine. The references give the exact files and code.
    file (e.g. `ioserver_single1.xml`).
 4. **Declare queues** — add `to.ioservice.<name>` and `from.ioservice.<name>.error` to
    `usr/etc/ccf.xml`.
-5. **Route in the Integrator** — Camel routes in `clusterroutes.xml` (file drop, Pub/Sub
-   pull, or other custom source) or `wsroutes.xml` (SMOG web services). The route is the only
-   piece that depends on *where* the data comes from; everything downstream is
-   transport-agnostic — see `references/ara-interface.md` Phase 6.
+5. **Route in the Integrator** — the route file depends on transport/protocol:
+   `clusterroutes.xml` for custom sources (file drop, Pub/Sub pull), and for SMOG web
+   services soap→`wsroutes.xml` and openapi→`camelrestroutes.xml` are fixed by the contract,
+   while plainxml/json follow their *source* (usually `clusterroutes.xml`). See the routing table in
+   `references/smog-interface.md`; for custom-source ARA routes see
+   `references/ara-interface.md` Phase 6. The route is the only piece that depends on
+   *where* the data comes from; everything downstream is transport-agnostic.
 6. **Test** — integration tests with `IOServiceTestBase`; see `references/testing.md`.
 7. **Document & commit** — add to `usr/doc/static/datafeeds.rst`; commit as one logical block.
 
@@ -143,7 +199,8 @@ Load the one that matches the task; don't read them all upfront.
   parser/handler patterns, dynamic lookups, total-state synchronization, uniqueness
   handling, fault handling. Includes the legality_input / limops / clockwork examples.
 - `references/smog-interface.md` — SMOG contract-first interfaces: the three XML files,
-  `ioservice_builder` registration and generation, wsroutes wiring.
+  `ioservice_builder` registration and generation, and the protocol→route-file mapping
+  (soap→wsroutes, openapi→camelrestroutes; plainxml/json follow their source, usually clusterroutes).
 - `references/testing.md` — The integration test framework: IOServiceTestBase,
   BehaveStepRunner/Gherkin setup, put_msg/process, assertMaveChanges/assertMaveFixture,
   and running tests with `ioservice_testrunner`.

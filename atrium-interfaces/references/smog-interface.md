@@ -56,19 +56,51 @@ These are *generated* — don't hand-edit them; change the contract XML and rege
 
 ## Phase 3 — Integration
 
-**Web service route** in `usr/integrator/routes/wsroutes.xml` (SMOG web services use
-`wsroutes`, not `clusterroutes`):
+**The route file depends on the protocol** — this is the piece most often gotten wrong.
+There's no single "SMOG route file"; the protocol you generated with decides both the file
+and the route style:
+
+| protocol | route file | route style |
+| :--- | :--- | :--- |
+| `soap` | `usr/integrator/routes/wsroutes.xml` | `cxf:` endpoint + WSDL |
+| `openapi` | `usr/integrator/routes/camelrestroutes.xml` | `<templatedRoute routeTemplateRef="openApiToIOService">` |
+| `plainxml` / `plainjson` | depends on the *source* — usually `clusterroutes.xml` | direct `<to>` the `to.ioservice` queue |
+
+`soap` and `openapi` are protocol-determined: the generated WSDL/OpenAPI contract dictates
+a CXF or REST front door, so the file is fixed. `plainxml`/`plainjson` have no web-service
+contract — the message just lands on the `to.ioservice` queue — so the route lives wherever
+the *source* is wired: `clusterroutes.xml` for the common order-preserving feeds (file drop,
+broker/Pub-Sub pull), but a plain-JSON/XML service that's also exposed as an HTTP endpoint
+gets a `direct:`/REST route in `camelrestroutes.xml` too. Don't assume one file — grep the
+existing routes for a comparable `to.ioservice.<something>_plain{json,xml}` and match it.
+
+**SOAP** — `cxf:` route in `wsroutes.xml`:
 
 ```xml
 <route id="MyInterface_1">
-  <from uri="cxf:/MyService/v1?wsdlURL=file://{{env:CARMTMP}}/ioservice_builder/contract/MyInterface_1.wsdl&amp;dataFormat=MESSAGE" />
+  <from uri="cxf:/MyService/v1?wsdlURL=file://{{env:CARMTMP}}/ioservice_builder/contract/std_interfaces/MyInterface_1.wsdl&amp;dataFormat=MESSAGE" />
   <to uri="internalBroker:queue:{{env:CCF_PREFIX}}to.ioservice.MyInterface_1_soap" />
 </route>
 ```
 
+**OpenAPI / REST** — templated route in `camelrestroutes.xml` (the template turns the
+generated OpenAPI schema into a REST endpoint and forwards to the queue):
+
+```xml
+<templatedRoute routeTemplateRef="openApiToIOService" routeId="MyInterface_1_openapi">
+  <parameter name="openApiSchema" value="{{env:CARMTMP}}/ioservice_builder/contract/std_interfaces/MyInterface_1_openapi.json"/>
+  <parameter name="basePath" value="/MyService/1"/>
+  <parameter name="targetQueue" value="{{env:CCF_PREFIX}}to.ioservice.MyInterface_1_openapi"/>
+</templatedRoute>
+```
+
+**plainxml / plainjson** — a direct `<to>` the inbound queue in `clusterroutes.xml`, with
+whatever source (file drop, broker pull) feeds it.
+
 **Queues** in `usr/etc/ccf.xml`:
-- `to.ioservice.MyInterface_1_soap`
-- `from.ioservice.MyInterface_1_soap.error`
+- `to.ioservice.MyInterface_1_<protocol>` (inbound)
+- `from.ioservice.MyInterface_1_<protocol>.error` (failures)
+- `from.ioservice.MyInterface_1_<protocol>` (response sink — **request/response only**)
 
 **Activation** — include the *generated* config in your IOServer process file:
 
