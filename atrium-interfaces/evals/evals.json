@@ -1,0 +1,26 @@
+{
+  "skill_name": "atrium-interfaces",
+  "evals": [
+    {
+      "id": 0,
+      "name": "activate-dormant-catalog-output",
+      "prompt": "What would I have to do to activate the catalog_data_output (catalogdata) interface? The main files are inside core. I want external systems to be able to pull the master data over a REST endpoint.",
+      "expected_output": "Recognizes this is a dormant core SMOG request/response interface that is fully implemented in $CARMSYS (services.xml + protocol.xml + mapping.xml + handler catalog_data_1.py) but not wired up. Gives the activation checklist: (1) register in usr/data/config/ioservice_builder.xml pointing at the core contract with protocol=openapi; (2) run ioservice_builder to generate the .json contract + handler; (3) add an activation config under usr/etc/programs/ioservices/datafeeds/ (clone the FlightState_1_beta_openapi.xml request/response config); (4) declare queues in usr/etc/ccf.xml — including the response sink from.ioservice.<name> as well as to.ioservice.<name> and from.ioservice.<name>.error; (5) add a templatedRoute (openApiToIOService) in usr/integrator/routes/camelrestroutes.xml; (6) include the activation config in an ioserver_* process file. Uses runtime name CatalogDataOutput_1_beta_openapi (service name CatalogDataOutput, version 1.beta). All changes under $CARMUSR, none in $CARMSYS.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "smog-protocol-to-route-file",
+      "prompt": "I'm exposing a SMOG service in Atrium. Which Integrator route file and route style do I use — and does it depend on whether I pick soap, openapi, or plainjson as the protocol?",
+      "expected_output": "Correctly maps protocol to route file: soap -> wsroutes.xml with a cxf: endpoint + WSDL; openapi -> camelrestroutes.xml with a <templatedRoute routeTemplateRef=\"openApiToIOService\"> using openApiSchema/basePath/targetQueue params; plainxml/plainjson -> clusterroutes.xml with a direct <to> to the to.ioservice queue. Does NOT claim all SMOG services go to wsroutes.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "activate-dormant-roster-output",
+      "prompt": "The roster_output interface ships in core but doesn't seem to be running. How do I turn it on so we can push roster data out as JSON?",
+      "expected_output": "Recognizes this as a dormant core SMOG output interface (RosterStateOutput v5 under std_interfaces.roster_output_5) that needs wiring, not new code. Gives the same activation checklist (register in usr builder with plainjson protocol -> generate -> activation config -> queues -> route -> process include). Because JSON/plainjson is requested, routes via clusterroutes.xml (direct <to> the queue), NOT the openapi templatedRoute and NOT wsroutes. All changes under $CARMUSR.",
+      "files": []
+    }
+  ]
+}
