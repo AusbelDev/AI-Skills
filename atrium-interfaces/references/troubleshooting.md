@@ -28,6 +28,30 @@ Outgoing messages carry a `jcms_responsecode` header. It tells you the dispositi
 A `MESSAGE_BLOCKED` poison message is the most common reason a whole interface appears
 frozen — the same bad message is retried forever, blocking the queue.
 
+## "Processed OK, but the editor/table didn't change"
+
+A distinct and confusing signature: the file is consumed, the queue drains, a downstream
+message (e.g. EMH) is generated — every outward sign says success — yet the values in the
+Tracking/Data Editor are unchanged. This is rarely a *write* bug. It is almost always a
+**failed reference/key lookup** upstream of the write:
+
+- **Silent no-op update.** The handler's "find the existing record, then update it" logic
+  keys on a value that doesn't match what the sender transmitted (e.g. resolving an
+  `aircraft_group` by internal `id` `A330` when the file carries the IATA code `330`). The
+  find returns nothing, the update loop iterates zero times, and nothing is written — with
+  no error at all.
+- **Skipped-but-looks-successful.** The resolver raises `Unable to find <x>` on the
+  unmatched key; the message is `MESSAGE_SKIPPED` (failed and dropped). From the outside the
+  feed "ran," but the row was discarded.
+
+How to confirm: trace the message in the IOServer logs. `Calling` **without** `Committing`,
+or a `MESSAGE_SKIPPED` disposition, points at a lookup that raised. If it committed cleanly
+yet nothing changed, suspect the no-op path — check what key the `find`/`searchByPrototype`
+uses against the exact value in the payload. The fix belongs in the resolver (match on the
+representation the sender actually uses, with a fallback), and the regression test must use
+a fixture built from the real payload — see the fixture-fidelity note in
+`references/testing.md`.
+
 ## How a trigger fails (the trigger analogue of a poison message)
 
 Triggers don't consume an inbound queue, so they don't `MESSAGE_BLOCKED` — but they have

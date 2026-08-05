@@ -71,6 +71,42 @@ A green run prints `PASSED: N tests OK`; the tool also emits a JSON summary line
 the simulated schema matches your new fields — otherwise fixture assertions on those columns
 will fail confusingly.
 
+## Fixtures must mirror the real external payload
+
+A test is only as honest as its input message. The most dangerous failure mode is a suite
+that is **all green while production silently does nothing** — and it almost always traces
+to a fixture that sends a value production never sends.
+
+The classic trap is a reference-data code with **several representations**. An
+`aircraft_group`, for example, has both an internal `id` (`A330`) and an `iata` code
+(`330`); a station or function may likewise be addressable by more than one key. If the
+external party transmits the IATA code but the fixture uses the internal id, and the
+handler's lookup keys on `id`, then:
+
+- the **fixture path** finds the record and passes, but
+- the **production path** never matches — so a "find existing then update" becomes a no-op,
+  or the resolver raises and the message is skipped (see the "processed OK but nothing
+  changed" signature in `references/troubleshooting.md`).
+
+Rule of thumb: **build the fixture from a real captured payload** (an actual file drop, the
+EMH/queue message, the vendor's sample), not from what is convenient to look up in the test
+plan. When an inbound field is a coded reference, confirm *which* representation the sender
+uses and encode that. It is worth keeping one fixture on each representation the handler is
+supposed to accept, so the resolver's fallback logic is genuinely exercised.
+
+## Reopened tickets: reproduce before fixing
+
+When a ticket comes back reopened, the prior fix was usually *partially* right — it solved
+one facet and left another, or it was verified only against a fixture that didn't match
+production. Resist re-reading the code and re-deriving a theory. Instead:
+
+1. **Diff the current behavior against the prior fix commit** to see exactly what was
+   changed and what it did *not* cover.
+2. **Write a failing test that replays the real production input** — the actual codes,
+   formats, and edge values from the evidence (file, message, screenshot). If it reproduces
+   the reported symptom, you have pinned the root cause empirically rather than by
+   inspection. Only then change code, and keep that test as the regression guard.
+
 ## Gotcha: local↔UTC conversion needs timezone data in the fixture
 
 If your handler converts local time to UTC (or back) via `station.toUTCTime(...)` /

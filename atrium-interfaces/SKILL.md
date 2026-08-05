@@ -35,7 +35,8 @@ Most requests fall into one of these. Identify which, then follow the matching p
 | **Activate** a dormant core interface | "how do I turn on X", "X ships in core but isn't running", "activate the catalog feed" | See "Activating a dormant core interface" below |
 | **Migrate** a legacy script | "port legality.py", "modernize this DIG feed" | `references/ara-interface.md` (migrations are almost always ARA) |
 | **Test** an interface | "write tests for…", "why does my test fail" | `references/testing.md` |
-| **Troubleshoot** a live feed | "message is stuck", "service degraded", "MESSAGE_BLOCKED" | `references/troubleshooting.md` |
+| **Troubleshoot** a live feed | "message is stuck", "service degraded", "MESSAGE_BLOCKED", "feed ran but nothing updated" | `references/troubleshooting.md` |
+| **Fix a reopened bug** | "this was fixed but came back", "the reopened ticket" | Reproduce before fixing — `references/testing.md` |
 
 These overlap — adapting a core interface still uses the SMOG or ARA mechanics below, and
 every path ends in testing. Pick the dominant intent and pull in the others as needed.
@@ -203,7 +204,9 @@ Load the one that matches the task; don't read them all upfront.
   (soap→wsroutes, openapi→camelrestroutes; plainxml/json follow their source, usually clusterroutes).
 - `references/testing.md` — The integration test framework: IOServiceTestBase,
   BehaveStepRunner/Gherkin setup, put_msg/process, assertMaveChanges/assertMaveFixture,
-  and running tests with `ioservice_testrunner`.
+  running tests with `ioservice_testrunner`, why fixtures must mirror the real external
+  payload, and the reproduce-before-fixing loop for reopened tickets.
 - `references/troubleshooting.md` — Diagnostics: reading IOServer logs, the
-  `jcms_responsecode` values, tracing by msgId/jcms_traceid/cid, and the cmsshell /
-  ioserverctl commands for stuck or degraded services.
+  `jcms_responsecode` values, tracing by msgId/jcms_traceid/cid, the cmsshell /
+  ioserverctl commands for stuck or degraded services, and the "processed OK but nothing
+  changed" (failed-lookup) signature.
