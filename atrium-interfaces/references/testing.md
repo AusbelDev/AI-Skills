@@ -66,10 +66,28 @@ cmsshell -c 'ioservice_testrunner -c datafeeds.<interface>.test.handler_test.<Te
 cmsshell -c 'ioservice_testrunner -s usr/lib/python usr/lib/python/datafeeds/<interface>/test'
 ```
 
-A green run prints `PASSED: N tests OK`; the tool also emits a JSON summary line with
-`failures`/`errors` you can scan. After a model extension, run `dave_model_migrator` first so
-the simulated schema matches your new fields — otherwise fixture assertions on those columns
+A green run prints `PASSED: N tests OK`; per-class lines read `PASSED:/FAILED: <class>
+(N seconds)`. **Parse the text summary, not JSON** — the `-j`/JSON flag has been seen to
+crash in some builds (`argument of type 'float' is not iterable`), so the human-readable
+lines are the reliable signal. Runs can be slow (tens of seconds per class) since each
+exercises the simulated DB. After a model extension, run `dave_model_migrator` first so the
+simulated schema matches your new fields — otherwise fixture assertions on those columns
 will fail confusingly.
+
+### Finding an interface's test package
+
+The test directory name is a snake_case slug (`usr/lib/python/datafeeds/crew_on_flight_4/`)
+that is **not** mechanically derivable from the `<ioservice name>` (`CrewOnFlight_4_event`).
+Don't guess the slug. Instead, every test module declares the interface it targets:
+
+```python
+ioservice_name = 'CrewOnFlight_4_event'
+```
+
+So to locate the tests for a given interface, grep for its exact name:
+`grep -rl "ioservice_name = ['\"]<Name>['\"]" usr/lib/python/datafeeds/*/test/`. One slug can
+hold tests for several related services (e.g. the `_event`, `_soap`, and vendor variants),
+each in its own `test_*.py` with its own `ioservice_name`.
 
 ## Fixtures must mirror the real external payload
 

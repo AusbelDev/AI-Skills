@@ -90,13 +90,85 @@ Enter the shell with `cmsshell`, then:
   persistent store when a **trigger** service is stuck. Triggers persist state in the HA
   store; a wedged trigger often needs this to recover.
 
+### Per-worker control with `ioserverctl`
+
+`ioserverctl` operates at the *service* (worker) level and takes `-p <process>` (the
+IOServer process the service runs under; see `sysmondctl` below to find it):
+
+- **`ioserverctl list -p <process>`** — the status table for every service in a process.
+  Columns are `Service | Status | Requested Workers | Running Workers`. Status is one of
+  `active` / `stopped` / `broken`; **`Running Workers` is the real "is it up" signal**
+  (`Requested Workers` reads 0 even for healthy services). A `broken` row with 0 running
+  workers is the degraded state to chase.
+- **`ioserverctl -p <process> -s <service> start|stop`** — bounce a *single* wedged worker
+  without restarting the whole IOServer process (and everything else sharing it). `start`
+  on an already-running service reports `has already started`; `stop` reports
+  `Stopping service '<name>'`. This is the surgical alternative to a process restart.
+
+### Which process runs a service — `sysmondctl`
+
+- **`sysmondctl status`** — lists every sysmond-managed process with its running state
+  (`Running with PID …` vs `is not running`) plus scheduled jobs. Use it to find which
+  IOServer process (`ioserver_single1`, `ioserver_batch`, …) hosts the service you want to
+  target with `ioserverctl -p`. Note the mapping is **many-to-many**: the `ioserver_*`
+  process files are alternative deployment topologies, so one interface may be declared in
+  several, and only some are running.
+
+## Inspecting queues (`amqctlpy`) — and the physical-name trap
+
+To see queue depth and consumers directly on the broker:
+
+```
+amqctlpy -b <broker> list -a -m -P <admin-password>
+```
+
+- **`-a` is essential.** Without it, `list` shows only queues declared in the config files,
+  which can print *nothing* even when queues are live on the broker. `-a`
+  (`--broker-queues`) asks the broker itself. `-m` (`--more`) adds the metric columns:
+  `QueueSize` (depth), `ConsumerCount`, `EnqueueCount`, `DequeueCount`.
+- **Read the health from the columns.** A `to.ioservice.<name>` with depth climbing and
+  `ConsumerCount = 0` is a stuck consumer; a `.error` queue with `QueueSize > 0` is the
+  accumulating-error signature. A healthy inbound queue shows `ConsumerCount ≥ 1`.
+
+> **The logical/physical queue-name trap.** The broker reports **physical** queue names
+> carrying the CCF `%(ccf/prefix)` (the `<instance_name>` in `ccf.xml`) — commonly
+> `<prefix>.to.ioservice.<name>`, e.g. `carmen.to.ioservice.FlightInput_5_plainxml`. But
+> the interface config and your mental model use the **logical** `<queue_reference>`
+> (`to.ioservice.<name>`, no prefix). So when matching a config queue to a broker queue,
+> account for the prefix. This bites hardest when *sending* (below): addressing the logical
+> name creates a brand-new, unconsumed queue that the worker never reads, so the message
+> silently goes nowhere.
+
+## Reproducing a live feed with a captured payload
+
+To exercise a running interface with a real payload (e.g. to reproduce a reported failure),
+put the message straight on its inbound queue and watch the outcome:
+
+```
+amqctlpy -b <broker> send -q <PHYSICAL-inbound-queue> <file>       # or -c '<inline content>'
+```
+
+- **Use the PHYSICAL (prefixed) queue name** — see the trap above. Sending to the logical
+  name looks like it works but the worker never consumes it.
+- Then re-run the `list -a -m` above: a consumed message shows `EnqueueCount` and
+  `DequeueCount` both incremented; a rejected one lands on the `.error` queue
+  (`QueueSize > 0`). Combined with the `Calling`/`Committing` log trace, this pins whether
+  the handler accepted or skipped the payload. Clean up afterward with
+  `amqctlpy -b <broker> purge <queue> -P <pwd>` (note: `purge`/`drop` take the queue
+  **positionally**, unlike `send`'s `-q`).
+
 ## A workflow for "the feed is stuck"
 
 1. `ioserver selftest` — is the service registered and are its queues present?
-2. `ioserverctl status <service>` — is the worker degraded/unresponsive?
-3. Check the queue depth and look for a `MESSAGE_BLOCKED` poison message being retried.
+2. `ioserverctl list -p <process>` (or `status <service>`) — is the worker `broken` /
+   degraded, or running with 0 workers?
+3. `amqctlpy … list -a -m` — is the inbound queue backing up with no consumer, or is the
+   `.error` queue non-empty? (Remember the physical-name prefix.) Look for a
+   `MESSAGE_BLOCKED` poison message being retried.
 4. Grep the logs for the message's `msgId`/`traceid`: did it get `Calling` without
    `Committing`? Read the exception there.
 5. If it's a trigger and nothing else explains it, `ioserver clear_hastore`.
 6. Fix the root cause (handler bug, bad payload, downstream/external timeout) — clearing
-   state without fixing the cause just defers the next block.
+   state without fixing the cause just defers the next block. To recover a single wedged
+   worker after the fix, `ioserverctl -p <process> -s <service> stop` then `start` rather
+   than bouncing the whole process.
