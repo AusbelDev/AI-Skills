@@ -8,7 +8,8 @@ description: >-
   Camel-based Integrator gateway, ActiveMQ/Qpid queues, Dave model extensions, and
   the IOServiceTestBase integration test framework. Use this skill whenever the user
   works with Atrium, JCMS, IOServer, SMOG, datafeeds, ioservices, Camel routes,
-  ccf.xml queues, or ARA handlers — for any interface, whether built from scratch or
+  ccf.xml queues, ARA handlers, Jobrunner jobs that export or feed an interface, or
+  which IOServer process/node a service runs on — for any interface, whether built from scratch or
   migrated from a legacy script. Applies any time they want to create a brand-new
   interface, port legacy logic into Atrium, write ioservice integration tests, or
   diagnose a stuck/degraded/failing feed, even if they don't name the framework
@@ -34,6 +35,8 @@ Most requests fall into one of these. Identify which, then follow the matching p
 | **Adapt** a core interface | "the standard FlightInput doesn't…", "extend the built-in feed to…" | See "Extending a core interface" below |
 | **Activate** a dormant core interface | "how do I turn on X", "X ships in core but isn't running", "activate the catalog feed" | See "Activating a dormant core interface" below |
 | **Migrate** a legacy script | "port legality.py", "modernize this DIG feed" | `references/ara-interface.md` (migrations are almost always ARA) |
+| **Drive** an interface from Jobrunner | "manual export", "cutover/bulk export", "add a job that sends…", "export by block month" | `references/jobrunner.md` |
+| **Place** a service on processes/nodes | "run it on one node", "change the workers", "messages out of order", "two producers on one queue" | See "Placing a service on IOServer processes" below |
 | **Test** an interface | "write tests for…", "why does my test fail" | `references/testing.md` |
 | **Troubleshoot** a live feed | "message is stuck", "service degraded", "MESSAGE_BLOCKED", "feed ran but nothing updated" | `references/troubleshooting.md` |
 | **Fix a reopened bug** | "this was fixed but came back", "the reopened ticket" | Reproduce before fixing — `references/testing.md` |
@@ -154,7 +157,8 @@ same pattern/protocol — e.g. `FlightState_1_beta_openapi` for a req/response o
    `references/smog-interface.md`.
 6. **Include** the activation config in the appropriate `ioserver_*` process file (batch for
    low-frequency / single-node exports, e.g. `ioserver_batch.xml`; `ioserver_single1.xml` for
-   others), then restart that IOServer and the Integrator.
+   others), then restart that IOServer and the Integrator. Check where that puts it in every
+   layout — see "Placing a service on IOServer processes" below.
 
 **Runtime naming.** The generated artifacts — handler module, contract file, activation
 config, and all queues — are named `<ServiceName>_<version>_<protocol>` with **dots in the
@@ -175,7 +179,8 @@ Both patterns share this spine. The references give the exact files and code.
    `ioservice_builder`. ARA: write `parser.py` + `handler.py`.
 3. **Register the IOService** — service XML under
    `usr/etc/programs/ioservices/datafeeds/`, then `<include>` it in an IOServer process
-   file (e.g. `ioserver_single1.xml`).
+   file (e.g. `ioserver_single1.xml`). The process decides how many instances run and on
+   which nodes — see "Placing a service on IOServer processes" below.
 4. **Declare queues** — add `to.ioservice.<name>` and `from.ioservice.<name>.error` to
    `usr/etc/ccf.xml`.
 5. **Route in the Integrator** — the route file depends on transport/protocol:
@@ -191,6 +196,48 @@ Both patterns share this spine. The references give the exact files and code.
 Don't blast through all seven silently. Confirm the pattern and the target tables with the
 user before writing code, and surface model extensions early — they change the DB schema
 and are the easiest thing to get wrong.
+
+## Placing a service on IOServer processes
+
+Which IOServer process includes a service decides how many copies of it run and on which
+nodes. That matters whenever message order matters, e.g. a single consumer, or a second
+producer (a Jobrunner job, see `references/jobrunner.md`) added next to a trigger.
+
+**Placement is per layout.** `$SERVICE_CONFIG_TYPE` (set by atriumctl, e.g. `1_infra_5_sps`)
+selects two files under `usr/etc/programs/`:
+
+- `sysmond/<type>.xml` — which processes each node starts (`<start>ioserver_…</start>` per
+  `<process name="sysmond_…">`). The same process can be started on several nodes:
+  a "datafeeds" process spread over 2–3 SPS nodes is typical.
+- `ioservices/<type>.xml` — worker pools, read by an activation config through
+  `<worker_pool_size>%{ioservices/workers/pool/<service>}</worker_pool_size>`. A layout
+  without this file has no value for the pool.
+
+**To run a service exactly once,** include it in a process that every layout starts on exactly
+one node (an HA-style `ioserver_single*` process is the usual choice), remove it from every
+other process file, and set its pool in each `ioservices/<type>.xml`. Two traps:
+
+- **Small layouts start a catch-all process next to the single ones.** If `ioserver_all` (or
+  similar) runs on the same node as `ioserver_single*`, a service left in both runs twice.
+  Remove it from the catch-all too.
+- **Tests bind to a process.** `IOServiceTestBase` subclasses name the process file in
+  `ioserver_name` and load the service from it; update them when the service moves.
+
+**One instance is not strict ordering.** A single process with N workers still processes up to
+N messages in parallel, so two messages for the same entity can finish out of order. One
+process removes the cross-node race but not this one. Tell the user, and don't claim
+guaranteed ordering unless the pool is 1.
+
+**Before and after any move, check every layout** with the bundled script:
+
+```bash
+python3 <skill-dir>/scripts/service_placement.py <service-name> $CARMUSR
+```
+
+It lists, per layout, the nodes that run the service, how many processes include it, and its
+worker pool, and flags layouts where it doesn't run, runs more than once, or has no pool file.
+When deploying a move, restart the old and new processes together; otherwise there is a
+window with two consumers, or none.
 
 ## Reference files
 
@@ -210,3 +257,9 @@ Load the one that matches the task; don't read them all upfront.
   `jcms_responsecode` values, tracing by msgId/jcms_traceid/cid, the cmsshell /
   ioserverctl commands for stuck or degraded services, and the "processed OK but nothing
   changed" (failed-lookup) signature.
+- `references/jobrunner.md` — Jobrunner jobs that drive an interface: job definitions and
+  the parameter/default/dispatch chains, `to.job.*` vs `JobrunnerExecuter` jobs, the silent
+  no-op of an undispatched job, `send_message` vs `request_ioservice` (reply-to diverts the
+  response away from the service's route), and feeding a service a trigger also feeds.
+- `scripts/service_placement.py` — prints where a service runs in every sysmond layout,
+  with its worker pool; see "Placing a service on IOServer processes".
